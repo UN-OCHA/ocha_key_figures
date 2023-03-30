@@ -4,7 +4,7 @@
     "license": "GPL-2.0-or-later",
     "type": "drupal-module",
     "require": {
-        "drupal/layout_paragraphs": ">=^2.0",
-        "drupal/formdazzle": ">=^2.1"
+        "drupal/layout_paragraphs": "^2.0",
+        "drupal/formdazzle": "^2.1"
     }
 }
