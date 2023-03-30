@@ -1,0 +1,19 @@
+uuid: 19278dcf-e874-40b5-a98a-30865d9ed6d3
+langcode: en
+status: true
+dependencies:
+  module:
+    - paragraphs
+id: paragraph.field_sorted_sparklines
+field_name: field_sorted_sparklines
+entity_type: paragraph
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

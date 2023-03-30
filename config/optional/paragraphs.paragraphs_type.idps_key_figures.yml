@@ -1,0 +1,10 @@
+uuid: ea9d4c64-86e7-461f-ade9-fb7d0a02eb95
+langcode: en
+status: true
+dependencies: {  }
+id: idps_key_figures
+label: 'Figures - IDPs'
+icon_uuid: null
+icon_default: null
+description: 'IDPs figures'
+behavior_plugins: {  }

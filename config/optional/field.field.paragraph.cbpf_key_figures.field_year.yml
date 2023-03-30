@@ -1,0 +1,21 @@
+uuid: e95518cc-4735-41ef-87f6-cbda7220e6bf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_year
+    - paragraphs.paragraphs_type.cbpf_key_figures
+  module:
+    - options
+id: paragraph.cbpf_key_figures.field_year
+field_name: field_year
+entity_type: paragraph
+bundle: cbpf_key_figures
+label: Year
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

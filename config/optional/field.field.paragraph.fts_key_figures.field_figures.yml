@@ -1,0 +1,21 @@
+uuid: f8177fdf-48c7-41ca-a0a2-c1c88a7db4e4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_figures
+    - paragraphs.paragraphs_type.fts_key_figures
+  module:
+    - options
+id: paragraph.fts_key_figures.field_figures
+field_name: field_figures
+entity_type: paragraph
+bundle: fts_key_figures
+label: Figures
+description: 'Select which figures needs to be displayed, if you select none, all will be displayed.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

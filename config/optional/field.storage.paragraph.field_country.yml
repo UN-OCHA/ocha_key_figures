@@ -1,0 +1,21 @@
+uuid: a0e56712-3bf9-4735-ac71-0494e6a7741f
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - paragraphs
+id: paragraph.field_country
+field_name: field_country
+entity_type: paragraph
+type: list_string
+settings:
+  allowed_values: {  }
+  allowed_values_function: ocha_key_figures_allowed_countries
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

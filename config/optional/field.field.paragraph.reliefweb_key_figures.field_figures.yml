@@ -1,0 +1,21 @@
+uuid: c44e505d-0036-418f-b51c-6c568df7e5e7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_figures
+    - paragraphs.paragraphs_type.reliefweb_key_figures
+  module:
+    - options
+id: paragraph.reliefweb_key_figures.field_figures
+field_name: field_figures
+entity_type: paragraph
+bundle: reliefweb_key_figures
+label: Figures
+description: 'Select which figures needs to be displayed, if you select none, all will be displayed.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

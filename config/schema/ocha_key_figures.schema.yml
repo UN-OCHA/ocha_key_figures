@@ -1,0 +1,10 @@
+ocha_key_figures.settings:
+  type: config_object
+  label: 'OCHA Key Figures settings'
+  mapping:
+    ocha_api_url:
+      type: string
+      label: 'OCHA API Url'
+    ocha_api_key:
+      type: string
+      label: 'OCHA API Key'

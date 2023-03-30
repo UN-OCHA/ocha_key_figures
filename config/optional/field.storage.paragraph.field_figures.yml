@@ -1,0 +1,21 @@
+uuid: 8cca3ab3-f271-47db-a348-6a356a07e7d9
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - paragraphs
+id: paragraph.field_figures
+field_name: field_figures
+entity_type: paragraph
+type: list_string
+settings:
+  allowed_values: {  }
+  allowed_values_function: ocha_key_figures_allowed_figures
+module: options
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

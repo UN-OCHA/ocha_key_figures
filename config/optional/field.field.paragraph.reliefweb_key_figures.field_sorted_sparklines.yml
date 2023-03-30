@@ -1,0 +1,19 @@
+uuid: f05944bc-154e-4a83-bc20-6031119a9328
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_sorted_sparklines
+    - paragraphs.paragraphs_type.reliefweb_key_figures
+id: paragraph.reliefweb_key_figures.field_sorted_sparklines
+field_name: field_sorted_sparklines
+entity_type: paragraph
+bundle: reliefweb_key_figures
+label: 'Sorted sparklines'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

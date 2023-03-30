@@ -1,0 +1,23 @@
+uuid: 1c72aa96-1408-43bb-814a-8cb6c95d536f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_show_sparklines
+    - paragraphs.paragraphs_type.inform_key_figures
+id: paragraph.inform_key_figures.field_show_sparklines
+field_name: field_show_sparklines
+entity_type: paragraph
+bundle: inform_key_figures
+label: 'Show sparklines'
+description: 'Show sparkline on key figures when data is available.'
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

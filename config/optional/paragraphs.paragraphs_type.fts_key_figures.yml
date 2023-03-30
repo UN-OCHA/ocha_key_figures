@@ -1,0 +1,10 @@
+uuid: 7fe58e34-b57f-4ae7-b682-7c644ca42a98
+langcode: en
+status: true
+dependencies: {  }
+id: fts_key_figures
+label: 'Figures - FTS'
+icon_uuid: null
+icon_default: null
+description: 'Display figures from FTS.'
+behavior_plugins: {  }

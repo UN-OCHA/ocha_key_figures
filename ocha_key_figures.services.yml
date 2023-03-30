@@ -1,0 +1,30 @@
+services:
+  ocha_key_figures.webhook_controller:
+    class: \Drupal\ocha_key_figures\Controller\WebhookController
+    arguments: ['@logger.factory', '@entity_type.manager']
+
+  ocha_key_figures.rw_key_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\RWCrisisKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
+  ocha_key_figures.fts_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\FtsKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
+  ocha_key_figures.idps_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\IdpsKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
+  ocha_key_figures.cbpf_key_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\CbpfKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
+  ocha_key_figures.inform_key_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\InformKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
+  ocha_key_figures.cerf_key_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\CerfKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
+
+  ocha_key_figures.cache:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin, default_backend: cache.backend.permanent_database }
+    factory: cache_factory:get
+    arguments: [keyfigures]

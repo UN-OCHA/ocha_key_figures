@@ -1,0 +1,21 @@
+uuid: d7c3dccc-e8e2-492e-be6d-5e0b1cc00b20
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_active_sparklines
+    - paragraphs.paragraphs_type.reliefweb_key_figures
+  module:
+    - options
+id: paragraph.reliefweb_key_figures.field_active_sparklines
+field_name: field_active_sparklines
+entity_type: paragraph
+bundle: reliefweb_key_figures
+label: 'Active sparklines'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

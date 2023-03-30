@@ -1,0 +1,93 @@
+/**
+ * Admin theme styles
+ */
+
+/* Key Figures */
+.ocha-key-figures__list {
+  --rwkf-num-cols: 1;
+  --rwkf-gap-size: 1rem;
+
+  display: flex;
+  flex-flow: row wrap;
+  gap: var(--rwkf-gap-size);
+  margin: 0;
+  padding: 0;
+}
+@media screen and (min-width: 768px) {
+  .ocha-key-figures__list {
+    --rwkf-num-cols: 2;
+  }
+}
+.ocha-key-figures__list > li {
+  display: block;
+  margin: 0;
+  padding: 0;
+  flex: 0 1 calc((100% / var(--rwkf-num-cols)) - (var(--rwkf-gap-size) * (var(--rwkf-num-cols) - 1)));
+  border: 2px solid #0003;
+}
+.ocha-key-figures__figure__label {
+  font-weight: 700;
+  font-size: 1.25em;
+}
+
+/**
+ * Key Figures paragraph configuration
+ *
+ * Shows a simple list of figures until it is 10 items long, then displays the
+ * options in 3 columns.
+ */
+ .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+  column-gap: 2rem;
+}
+
+@media only screen and (min-width: 600px) {
+  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+    columns: 2 auto;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+    columns: 3 auto;
+  }
+}
+
+@media only screen and (min-width: 1600px) {
+  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+    columns: 4 auto;
+  }
+}
+
+@media only screen and (min-width: 2000px) {
+  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+    columns: 5 auto;
+  }
+}
+
+.field--name-field-figures .form-type-checkbox {
+  overflow: hidden;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.field--name-field-figures .form-checkboxes--checkbox {
+  break-inside: avoid;
+  margin: 0;
+  padding: 0.25rem;
+  cursor: move;
+}
+
+.field--name-field-figures .form-checkboxes--checkbox:hover {
+  background: #0001;
+  transition: background .1666s ease-in;
+}
+
+.field--name-field-figures .form-checkboxes--extra {
+  padding-inline-start: 1.1rem;
+  font-size: 90%;
+}
+
+.field--name-field-figures .form-checkboxes--extra label {
+  padding-inline-start: .333rem;
+}

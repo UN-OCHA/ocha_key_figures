@@ -1,0 +1,21 @@
+uuid: 69be2583-9461-4222-85a9-c3ded58f9327
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_country
+    - paragraphs.paragraphs_type.idps_key_figures
+  module:
+    - options
+id: paragraph.idps_key_figures.field_country
+field_name: field_country
+entity_type: paragraph
+bundle: idps_key_figures
+label: Country
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

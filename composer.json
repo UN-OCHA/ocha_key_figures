@@ -1,0 +1,10 @@
+{
+    "name": "unocha/ocha_key_figures",
+    "description": "UNOCHA Key Figures",
+    "license": "GPL-2.0-or-later",
+    "type": "drupal-module",
+    "require": {
+        "drupal/layout_paragraphs": ">=^2.0",
+        "drupal/formdazzle": ">=^2.1"
+    }
+}

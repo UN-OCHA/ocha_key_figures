@@ -1,0 +1,10 @@
+uuid: 2d96c190-a3d6-44e9-96f2-fdb12477b739
+langcode: en
+status: true
+dependencies: {  }
+id: cbpf_key_figures
+label: 'Figures - CBPF'
+icon_uuid: null
+icon_default: null
+description: ''
+behavior_plugins: {  }

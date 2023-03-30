@@ -1,0 +1,827 @@
+<?php
+
+/**
+ * @file
+ * Themes and preprocessors for the paragraphs page title module.
+ */
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
+use Drupal\paragraphs\Entity\Paragraph;
+
+/**
+ * Implements hook_theme().
+ */
+function ocha_key_figures_theme($existing, $type, $theme, $path) {
+  return [
+    'ocha_key_figures_key_figures' => [
+      'template' => 'ocha-key-figures-key-figures',
+      'variables' => [
+        'country_iso' => NULL,
+        'country_name' => NULL,
+        'data' => [],
+        'total' => [],
+        'view_all' => NULL,
+        'view_all_info' => [],
+        'jsonld' => NULL,
+      ],
+    ],
+    'form_element_label__checkbox' => [
+      'template' => 'form-element-label--checkbox',
+      'render element' => 'element',
+    ],
+    'checkboxes__layout_paragraphs_component_form__field_figures' => [
+      'template' => 'checkboxes--layout-paragraphs-component-form--field-figures',
+      'render element' => 'element',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
+function ocha_key_figures_preprocess_paragraph__reliefweb_key_figures(&$variables) {
+  /** @var \Drupal\ocha_key_figures\Controller\RWCrisisKeyFiguresController */
+  $controller = \Drupal::service('ocha_key_figures.rw_key_figures_controller');
+
+  $paragraph = $variables['paragraph'];
+  if ($paragraph->hasField('field_country') && !$paragraph->field_country->isEmpty()) {
+    $iso3 = $paragraph->field_country->value;
+
+    $variables['view_all'] = TRUE;
+    $variables['view_all_info'] = [
+      'href' => 'https://reliefweb.int/country/' . $iso3 . '?figures=all#key-figures',
+    ];
+  }
+
+  ocha_key_figures_keyfigures($variables, $controller);
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
+function ocha_key_figures_preprocess_paragraph__fts_key_figures(&$variables) {
+  /** @var \Drupal\ocha_key_figures\Controller\FtsKeyFiguresController */
+  $controller = \Drupal::service('ocha_key_figures.fts_figures_controller');
+
+  ocha_key_figures_keyfigures($variables, $controller);
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
+function ocha_key_figures_preprocess_paragraph__idps_key_figures(&$variables) {
+  /** @var \Drupal\ocha_key_figures\Controller\IdpsKeyFiguresController */
+  $controller = \Drupal::service('ocha_key_figures.idps_figures_controller');
+
+  ocha_key_figures_keyfigures($variables, $controller);
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
+function ocha_key_figures_preprocess_paragraph__cbpf_key_figures(&$variables) {
+  /** @var \Drupal\ocha_key_figures\Controller\CbpfKeyFiguresController */
+  $controller = \Drupal::service('ocha_key_figures.cbpf_key_figures_controller');
+
+  ocha_key_figures_keyfigures($variables, $controller);
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
+function ocha_key_figures_preprocess_paragraph__inform_key_figures(&$variables) {
+  /** @var \Drupal\ocha_key_figures\Controller\InformKeyFiguresController */
+  $controller = \Drupal::service('ocha_key_figures.inform_key_figures_controller');
+
+  ocha_key_figures_keyfigures($variables, $controller);
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
+function ocha_key_figures_preprocess_paragraph__cerf_key_figures(&$variables) {
+  /** @var \Drupal\ocha_key_figures\Controller\CerfKeyFiguresController */
+  $controller = \Drupal::service('ocha_key_figures.cerf_key_figures_controller');
+
+  ocha_key_figures_keyfigures($variables, $controller);
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
+function ocha_key_figures_preprocess_paragraph__featured_numbers(&$variables) {
+  /** @var \Drupal\paragraphs\Entity\Paragraph $paragraph */
+  $paragraph = $variables['paragraph'];
+  $view_all = FALSE;
+
+  // Allow push subscription.
+  $view_mode = $variables['view_mode'];
+  if ($view_mode !== 'preview') {
+    $variables['attributes']['data-push-allowed'] = TRUE;
+    $variables['attributes']['data-push-id'] = $paragraph->id();
+  }
+
+  // Make sure numbers are set.
+  if (!$paragraph->hasField('field_numbers') || $paragraph->field_numbers->isEmpty()) {
+    return;
+  }
+
+  $key_figures = [];
+  /** @var \Drupal\paragraphs\Entity\Paragraph $number */
+  foreach ($paragraph->field_numbers->referencedEntities() as $number) {
+    // Make sure Country is set.
+    if (!$number->hasField('field_country') || $number->field_country->isEmpty()) {
+      return;
+    }
+
+    /** @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController $controller */
+    $controller = ocha_key_figures_load_keyfigure_controller_by_entity($number);
+
+    if (!$controller) {
+      continue;
+    }
+
+    // Do we need sparklines.
+    $sparklines = FALSE;
+    if ($number->hasField('field_show_sparklines') && $number->field_show_sparklines->value) {
+      $sparklines = TRUE;
+    }
+
+    // Get the data.
+    $data = ocha_key_figures_get_keyfigure_data($number, $controller, $sparklines);
+    if (empty($data)) {
+      continue;
+    }
+
+    $key_figures = array_merge($key_figures, $data);
+  }
+
+  if (!empty($key_figures)) {
+    // Add year to name.
+    foreach ($key_figures as &$key_figure) {
+      $key_figure['name'] = $key_figure['country'] . ' - ' . $key_figure['name'];
+    }
+
+    $variables['content']['key_figures'] = [
+      '#theme' => 'ocha_key_figures_key_figures',
+      '#data' => $key_figures,
+      '#view_all' => $view_all,
+      '#weight' => 99,
+      '#cache' => [
+        'max-age' => 12 * 60 * 60,
+      ],
+    ];
+  }
+}
+
+/**
+ * Helper function to render Numbers paragraphs.
+ */
+function ocha_key_figures_get_keyfigure_data(Paragraph $paragraph, BaseKeyFiguresController $controller, $sparklines = FALSE) {
+  // Make sure Country is set.
+  if (!$paragraph->hasField('field_country') || $paragraph->field_country->isEmpty()) {
+    return;
+  }
+
+  // Fetch country from user input.
+  $iso3 = $paragraph->field_country->value;
+
+  $year = FALSE;
+  if (!$paragraph->hasField('field_year') || !$paragraph->field_year->isEmpty()) {
+    $year = $paragraph->field_year->value;
+    if ($year === 'current') {
+      $year = date('Y');
+    }
+  }
+
+  // Selected figures.
+  $selected_figures = [];
+  if ($paragraph->hasField('field_figures') && !$paragraph->field_figures->isEmpty()) {
+    foreach ($paragraph->field_figures->getValue() as $figure) {
+      $selected_figures[$figure['value']] = $figure['value'];
+    }
+  }
+
+  try {
+    // Get the data.
+    $results = $controller->getKeyFigures($iso3, $year);
+
+    // Filter figures.
+    if (!empty($selected_figures)) {
+      $results = array_intersect_key($results, $selected_figures);
+    }
+
+    // Build figures.
+    $data = $controller->buildKeyFigures($results, $sparklines);
+    if (empty($data)) {
+      return FALSE;
+    }
+
+    // Set dollar-sign prefix if data is financial.
+    if ($controller->isFinancial()) {
+      foreach ($data as &$fig) {
+        $fig['prefix'] = '$';
+      }
+    }
+
+    // Hide individual sparklines.
+    if ($sparklines) {
+      $with_sparkline = [];
+      if ($paragraph->hasField('field_active_sparklines') && !$paragraph->field_active_sparklines->isEmpty()) {
+        foreach ($paragraph->field_active_sparklines->getValue() as $figure) {
+          $with_sparkline[$figure['value']] = $figure['value'];
+        }
+      }
+
+      if (!empty($with_sparkline)) {
+        foreach ($data as &$figure) {
+          if (!in_array($figure['name'], $with_sparkline)) {
+            unset($figure['trend']);
+            unset($figure['sparkline']);
+          }
+        }
+      }
+    }
+
+    // Use a custom sort order?
+    if ($paragraph->hasField('field_sorted_sparklines') && !$paragraph->field_sorted_sparklines->isEmpty()) {
+      $separator = '|-|';
+      $order = $paragraph->field_sorted_sparklines->value;
+      $order = explode($separator, $order);
+      $order = array_flip($order);
+      $order = array_intersect_key($order, $data);
+      $data = array_merge($order, $data);
+    }
+
+    return $data;
+  }
+  catch (\Exception $exception) {
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Helper function to render Numbers paragraphs.
+ */
+function ocha_key_figures_keyfigures(&$variables, BaseKeyFiguresController $controller) {
+  /** @var \Drupal\paragraphs\Entity\Paragraph $paragraph */
+  $paragraph = $variables['paragraph'];
+  $view_all = $variables['view_all'] ?? FALSE;
+  $view_all_info = $variables['view_all_info'] ?? NULL;
+
+  // Allow push subscription.
+  $view_mode = $variables['view_mode'];
+  if ($view_mode !== 'preview') {
+    $variables['attributes']['data-push-allowed'] = TRUE;
+    $variables['attributes']['data-push-id'] = $paragraph->id();
+  }
+
+  // Do we need sparklines.
+  $sparklines = FALSE;
+  if ($paragraph->hasField('field_show_sparklines') && $paragraph->field_show_sparklines->value) {
+    $sparklines = TRUE;
+  }
+
+  // Get the data.
+  $data = ocha_key_figures_get_keyfigure_data($paragraph, $controller, $sparklines);
+
+  if (!$data or empty($data)) {
+    $variables['content']['key_figures'] = [
+      '#type' => 'markup',
+      '#markup' => t('Key figure data is currently not available.'),
+      '#prefix' => '<div class="response-error response-error-api response-error-fts">',
+      '#suffix' => '</div>',
+    ];
+
+    return;
+  }
+
+  // Initialize data for JSON-LD.
+  $json_data = [];
+  foreach ($data as $row) {
+    $json_data[$row['name']] = $row['value'];
+  }
+
+  // Add metadata to JSON-LD.
+  // Fetch country from user input.
+  $iso3 = $paragraph->field_country->value;
+
+  $year = FALSE;
+  if (!$paragraph->hasField('field_year') || !$paragraph->field_year->isEmpty()) {
+    $year = $paragraph->field_year->value;
+    if ($year === 'current') {
+      $year = date('Y');
+    }
+  }
+
+  $first = reset($data);
+  $country = $first['country'];
+
+  if ($view_all) {
+    if (!isset($view_all_info['title'])) {
+      $view_all_info['title'] = t('View all @country figures', [
+        '@country' => $country,
+      ]);
+    }
+  }
+
+  $name = t('@title of @country', [
+    '@title' => $paragraph->field_title->value ?? 'Key figures',
+    '@country' => $country,
+  ]);
+  $description = t('Easily discoverable topline numbers for humanitarian crises in @country', [
+    '@country' => $country,
+  ]);
+
+  $metadata = ocha_key_figures_metadata_by_type($paragraph->bundle());
+  $metadata += [
+    'name' => $name,
+    'short_name' => $paragraph->field_title->value ?? 'Key figures',
+    'spatialCoverage' => $country,
+    'description' => $description,
+    'temporalCoverage' => $year === FALSE ? '2000-01-01/..' : $year,
+  ];
+
+  $variables['content']['key_figures'] = [
+    '#theme' => 'ocha_key_figures_key_figures',
+    '#country_iso' => $iso3,
+    '#country_name' => $country,
+    '#data' => $data,
+    '#jsonld' => ocha_key_figures_add_jsonld_data($metadata, $json_data),
+    '#view_all' => $view_all,
+    '#view_all_info' => $view_all_info,
+    '#weight' => 99,
+    '#cache' => [
+      'max-age' => 12 * 60 * 60,
+    ],
+  ];
+}
+
+/**
+ * Load controller by entity.
+ */
+function ocha_key_figures_load_keyfigure_controller_by_entity(ContentEntityInterface $entity) {
+  if ($entity->bundle() == 'featured_number') {
+    if ($entity->hasField('field_source') && !$entity->field_source->isEmpty()) {
+      return ocha_key_figures_load_keyfigure_controller($entity->field_source->value);
+    }
+
+    return \Drupal::service('ocha_key_figures.rw_key_figures_controller');
+  }
+
+  return ocha_key_figures_load_keyfigure_controller($entity->bundle());
+}
+
+/**
+ * Load controller by bundle.
+ */
+function ocha_key_figures_load_keyfigure_controller($bundle) {
+  switch ($bundle) {
+    case 'fts_key_figures':
+      return \Drupal::service('ocha_key_figures.fts_figures_controller');
+
+    case 'idps_key_figures':
+      return \Drupal::service('ocha_key_figures.idps_figures_controller');
+
+    case 'reliefweb_key_figures':
+      return \Drupal::service('ocha_key_figures.rw_key_figures_controller');
+
+    case 'cbpf_key_figures':
+      return \Drupal::service('ocha_key_figures.cbpf_key_figures_controller');
+
+    case 'inform_key_figures':
+      return \Drupal::service('ocha_key_figures.inform_key_figures_controller');
+
+    case 'cerf_key_figures':
+      return \Drupal::service('ocha_key_figures.cerf_key_figures_controller');
+
+  }
+
+  return NULL;
+}
+
+/**
+ * Allowed years.
+ */
+function ocha_key_figures_allowed_years(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, $cacheable) {
+  /** @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController */
+  $controller = ocha_key_figures_load_keyfigure_controller_by_entity($entity);
+
+  if (!$controller) {
+    return [];
+  }
+
+  $options = [
+    'current' => t('Current year'),
+  ];
+
+  $years = $controller->getYears();
+  $options += $years;
+
+  return $options;
+}
+
+/**
+ * Allowed countries.
+ */
+function ocha_key_figures_allowed_countries(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, $cacheable) {
+  /** @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController */
+  $controller = ocha_key_figures_load_keyfigure_controller_by_entity($entity);
+
+  if (!$controller) {
+    return [];
+  }
+
+  return $controller->getCountries();
+}
+
+/**
+ * Allowed figures.
+ */
+function ocha_key_figures_allowed_figures(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, $cacheable) {
+  /** @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController */
+  $controller = ocha_key_figures_load_keyfigure_controller_by_entity($entity);
+
+  if (!$controller) {
+    return [];
+  }
+
+  // Fetch country from user input.
+  $iso3 = $entity->field_country->value;
+  if (empty($iso3)) {
+    return [];
+  }
+
+  $year = FALSE;
+  if (!$entity->field_year->isEmpty()) {
+    $year = $entity->field_year->value;
+    if ($year === 'current') {
+      $year = date('Y');
+    }
+  }
+
+  $figures = $controller->getKeyFigures($iso3, $year);
+  $figures = array_keys($figures);
+
+  return array_combine($figures, $figures);
+}
+
+/**
+ * Metadata by type.
+ */
+function ocha_key_figures_metadata_by_type(string $bundle) {
+  switch ($bundle) {
+    case 'fts_key_figures':
+      return [
+        'publisher' => [
+          '@type' => 'Organization',
+          'sameAs' => 'https://ror.org/00aahzn97',
+          'name' => 'OCHA Financial Tracking System (FTS)',
+        ],
+        'creator' => [
+          '@type' => 'Organization',
+          'sameAs' => 'https://ror.org/00aahzn97',
+          'name' => 'OCHA Financial Tracking System (FTS)',
+        ],
+        'license' => [
+          '@type' => 'CreativeWork',
+          'name' => 'Creative Commons Attribution for Intergovernmental Organisations',
+          'url' => 'https://data.humdata.org/faqs/licenses#auto-faq-_Data_Licenses_Content_-Creative_Commons_Attribution_for_Intergovernmental_Organisations__CC_BY_IGO_-a',
+        ],
+      ];
+
+    case 'reliefweb_key_figures':
+      return [
+        'publisher' => [
+          '@type' => 'Organization',
+          'name' => 'ReliefWeb',
+        ],
+        'creator' => [
+          '@type' => 'Organization',
+          'name' => 'ReliefWeb',
+        ],
+        'license' => [
+          '@type' => 'CreativeWork',
+          'name' => 'Creative Commons Attribution for Intergovernmental Organisations',
+          'url' => 'https://data.humdata.org/faqs/licenses#auto-faq-_Data_Licenses_Content_-Creative_Commons_Attribution_for_Intergovernmental_Organisations__CC_BY_IGO_-a',
+        ],
+      ];
+
+    case 'inform_key_figures':
+      return [
+        'publisher' => [
+          '@type' => 'Organization',
+          'name' => 'ACAPS',
+        ],
+        'creator' => [
+          '@type' => 'Organization',
+          'name' => 'ACAPS',
+        ],
+        'license' => [
+          '@type' => 'CreativeWork',
+          'name' => 'Creative Commons Attribution International',
+          'url' => 'https://data.humdata.org/faqs/licenses#auto-faq-_Data_Licenses_Content_-Creative_Commons_Attribution_International_CC_BY_-a',
+        ],
+      ];
+
+    case 'cbpf_key_figures':
+    case 'cerf_key_figures':
+      return [
+        'publisher' => [
+          '@type' => 'Organization',
+          'sameAs' => 'https://ror.org/00aahzn97',
+          'name' => 'United Nations Office for the Coordination of Humanitarian Affairs',
+        ],
+        'creator' => [
+          '@type' => 'Organization',
+          'sameAs' => 'https://ror.org/00aahzn97',
+          'name' => 'United Nations Office for the Coordination of Humanitarian Affairs',
+        ],
+        'license' => [
+          '@type' => 'CreativeWork',
+          'name' => 'Creative Commons Attribution International',
+          'url' => 'https://data.humdata.org/faqs/licenses#auto-faq-_Data_Licenses_Content_-Creative_Commons_Attribution_International_CC_BY_-a',
+        ],
+      ];
+
+  }
+
+  // Default to OCHA.
+  return [
+    'publisher' => [
+      '@type' => 'Organization',
+      'sameAs' => 'https://ror.org/00aahzn97',
+      'name' => 'United Nations Office for the Coordination of Humanitarian Affairs',
+    ],
+    'creator' => [
+      '@type' => 'Organization',
+      'sameAs' => 'https://ror.org/00aahzn97',
+      'name' => 'United Nations Office for the Coordination of Humanitarian Affairs',
+    ],
+    'license' => [
+      '@type' => 'CreativeWork',
+      'name' => 'Creative Commons Attribution International',
+      'url' => 'https://data.humdata.org/faqs/licenses#auto-faq-_Data_Licenses_Content_-Creative_Commons_Attribution_International_CC_BY_-a',
+    ],
+  ];
+}
+
+/**
+ * Add json ld data.
+ */
+function ocha_key_figures_add_jsonld_data($metadata, $data) {
+  $label_column = [];
+  $value_column = [];
+  $keywords = [];
+
+  // Default keyword.
+  $keywords[] = 'ReliefWeb > Numbers > ' . $metadata['spatialCoverage'] . ' > ' . $metadata['short_name'];
+
+  foreach ($data as $label => $value) {
+    $label_column[] = [
+      'csvw:value' => $label,
+      'csvw:primaryKey' => $label,
+    ];
+
+    $value_column[] = [
+      'csvw:value' => $value,
+      'csvw:primaryKey' => $value,
+    ];
+
+    $keywords[] = 'ReliefWeb > Numbers > ' . $metadata['spatialCoverage'] . ' > ' . $metadata['short_name'] . ' > ' . $label;
+  }
+
+  $json_ld = [
+    '@context' => [
+      'https://schema.org',
+      [
+        'csvw' => 'http://www.w3.org/ns/csvw#',
+      ],
+    ],
+    '@type' => 'Dataset',
+    'keywords' => $keywords,
+    'isAccessibleForFree' => TRUE,
+    'mainEntity' => [
+      '@type' => 'csvw:Table',
+      'csvw:tableSchema' => [
+        'csvw:columns' => [
+          [
+            'csvw:name' => 'Label',
+            'csvw:datatype' => 'string',
+            'csvw:cells' => $label_column,
+          ],
+          [
+            'csvw:name' => 'Value',
+            'csvw:datatype' => 'number',
+            'csvw:cells' => $value_column,
+          ],
+        ],
+      ],
+    ],
+  ] + $metadata;
+
+  return json_encode($json_ld);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ocha_key_figures_form_layout_paragraphs_component_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if (!isset($form['field_country']) || !isset($form['field_figures'])) {
+    return;
+  }
+
+  // Add wrapper to figures.
+  $form['field_figures']['#prefix'] = '<div id="field-figures-wrapper">';
+  $form['field_figures']['#suffix'] = '</div>';
+
+  // Add callback for source if needed.
+  if (isset($form['field_source'])) {
+    // Add wrapper to years.
+    $form['field_country']['#prefix'] = '<div id="field-countries-wrapper">';
+    $form['field_country']['#suffix'] = '</div>';
+
+    $form['field_source']['widget']['#ajax'] = [
+      'callback' => 'ocha_key_figures_load_source_countries_callback',
+      'wrapper' => 'field-countries-wrapper',
+      'event' => 'change',
+      'progress' => [
+        'type' => 'throbber',
+        'message' => t('Fetching countries...'),
+      ],
+    ];
+
+    // Force single select for figure.
+    $form['field_figures']['widget']['#multiple'] = FALSE;
+
+    // Add states.
+    $form['field_country']['widget']['#states'] = [
+      'visible' => [
+        ':input[name="field_source"]' => ['!value' => '_none'],
+      ],
+    ];
+
+    $form['field_year']['widget']['#states'] = [
+      'visible' => [
+        ':input[name="field_source"]' => ['!value' => '_none'],
+        'and',
+        ':input[name="field_country"]' => ['!value' => '_none'],
+      ],
+    ];
+
+    $form['field_figures']['widget']['#states'] = [
+      'visible' => [
+        ':input[name="field_source"]' => ['!value' => '_none'],
+        'and',
+        ':input[name="field_country"]' => ['!value' => '_none'],
+        'and',
+        ':input[name="field_year"]' => ['!value' => '_none'],
+      ],
+    ];
+  }
+
+  // Add ajax to countries.
+  $form['field_country']['widget']['#ajax'] = [
+    'callback' => 'ocha_key_figures_load_country_figures_callback',
+    'wrapper' => 'field-figures-wrapper',
+    'event' => 'change',
+    'progress' => [
+      'type' => 'throbber',
+      'message' => t('Fetching figures...'),
+    ],
+  ];
+
+  // Add ajax to years.
+  $form['field_year']['widget']['#ajax'] = [
+    'callback' => 'ocha_key_figures_load_country_figures_callback',
+    'wrapper' => 'field-figures-wrapper',
+    'event' => 'change',
+    'progress' => [
+      'type' => 'throbber',
+      'message' => t('Fetching figures...'),
+    ],
+  ];
+
+  // Get bundle and fields.
+  /** @var Drupal\layout_paragraphs\Form\ComponentFormBase $component_form */
+  $component_form = $form_state->getFormObject();
+  $paragraph = $component_form->getParagraph();
+
+  if (isset($form['field_source'])) {
+    $source = $form_state->getValue('field_source');
+    if (!empty($source)) {
+      $source = $source[0]['value'];
+    }
+    else {
+      $source = $form['field_source']['widget']['#default_value'][0] ?? NULL;
+    }
+  }
+
+  $country = $form_state->getValue('field_country');
+  if (!empty($country)) {
+    $country = $country[0]['value'];
+  }
+  else {
+    $country = $form['field_country']['widget']['#default_value'][0] ?? NULL;
+  }
+
+  $year = $form_state->getValue('field_year');
+  if (!empty($year)) {
+    $year = $year[0]['value'];
+  }
+  else {
+    $year = $form['field_year']['widget']['#default_value'][0] ?? NULL;
+  }
+
+  if ($country) {
+    $form['field_figures']['widget']['#options'] = ocha_key_figures_load_country_figures($paragraph, $country, $year, $source);
+  }
+  else {
+    $form['field_figures']['widget']['#options'] = [];
+  }
+
+  $form['#attached']['library'][] = 'ocha_key_figures/admin';
+}
+
+/**
+ * Callback.
+ */
+function ocha_key_figures_load_country_figures_callback(array $form, $form_state) {
+  // Get paragraph fields.
+  $paragraph = $form_state->getFormObject()->getParagraph();
+
+  $source = $form_state->getValue('field_source');
+  $country = $form_state->getValue('field_country');
+  $year = $form_state->getValue('field_year');
+
+  if (!empty($source)) {
+    $source = $source[0]['value'];
+  }
+
+  if (!empty($year)) {
+    $year = $year[0]['value'];
+    if ($year === 'current') {
+      $year = date('Y');
+    }
+  }
+
+  if (!empty($country)) {
+    $country = $country[0]['value'];
+    $form['field_figures']['widget']['#options'] = ocha_key_figures_load_country_figures($paragraph, $country, $year, $source);
+  }
+  else {
+    $form['field_figures']['widget']['#options'] = [];
+  }
+
+  return $form['field_figures'];
+}
+
+/**
+ * Load figures for a country.
+ */
+function ocha_key_figures_load_country_figures(ContentEntityInterface $paragraph, $iso3, $year, $source = '') {
+  /** @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController */
+  if ($source) {
+    $controller = ocha_key_figures_load_keyfigure_controller($source);
+  }
+  else {
+    $controller = ocha_key_figures_load_keyfigure_controller_by_entity($paragraph);
+  }
+
+  if (!$controller) {
+    return [];
+  }
+
+  $figures = $controller->getKeyFigures($iso3, $year);
+  $figures = array_keys($figures);
+  sort($figures);
+
+  return array_combine($figures, $figures);
+}
+
+/**
+ * Callback.
+ */
+function ocha_key_figures_load_source_countries_callback(array $form, $form_state) {
+  $source = $form_state->getValue('field_source');
+
+  if (!empty($source)) {
+    $source = $source[0]['value'];
+
+    /** @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController */
+    $controller = ocha_key_figures_load_keyfigure_controller($source);
+
+    $countries = $controller->getCountries();
+    $form['field_country']['widget']['#options'] = $countries;
+  }
+  else {
+    $form['field_country']['widget']['#options'] = [];
+  }
+
+  return $form['field_country'];
+}

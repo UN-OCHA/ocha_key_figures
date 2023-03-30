@@ -1,0 +1,21 @@
+uuid: 1ed79968-e4ad-4e9b-9efc-e77b2f462b9d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_year
+    - paragraphs.paragraphs_type.featured_number
+  module:
+    - options
+id: paragraph.featured_number.field_year
+field_name: field_year
+entity_type: paragraph
+bundle: featured_number
+label: Year
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string
