@@ -1,0 +1,45 @@
+name: Run tests
+
+on: [pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup PHP with PECL extension
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.0
+          tools: composer
+        env:
+          fail-fast: true
+
+      - name: Software versions
+        id: versions
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            php --version && composer --version
+
+      - name: Checkout Code
+        id: checkout
+        uses: actions/checkout@v3
+
+      - name: Composer Validate
+        id: validate
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            composer validate
+        env:
+          fail-fast: true
+
+      - name: Code Lint
+        id: lint
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            test ! -d ./src || find -L ./src -iregex '.*\.\(php\|module\|inc\|install\)$' -print0 | xargs -0 -n 1 -P 4 php -l
+        env:
+          fail-fast: true
