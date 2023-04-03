@@ -72,6 +72,9 @@ class BaseKeyFiguresController extends ControllerBase {
 
     $this->apiUrl = $this->config('ocha_key_figures.settings')->get('ocha_api_url');
     $this->apiKey = $this->config('ocha_key_figures.settings')->get('ocha_api_key');
+
+    // Make sure it ends with a slash.
+    $this->apiUrl = rtrim($this->apiUrl, '/') . '/';
   }
 
   /**
