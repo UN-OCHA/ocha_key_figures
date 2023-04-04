@@ -9,7 +9,7 @@ use Drupal\Component\EventDispatcher\Event;
  */
 class KeyFiguresUpdated extends Event {
 
-  const EVENT_NAME = 'ocha_key_figures_updated';
+  const EVENT_UPDATED = 'ocha_key_figures_updated';
 
   /**
    * Keyed array of entities.
