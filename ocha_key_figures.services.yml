@@ -1,7 +1,7 @@
 services:
   ocha_key_figures.webhook_controller:
     class: \Drupal\ocha_key_figures\Controller\WebhookController
-    arguments: ['@logger.factory', '@entity_type.manager']
+    arguments: ['@logger.factory', '@entity_type.manager', '@event_dispatcher']
 
   ocha_key_figures.rw_key_figures_controller:
     class: \Drupal\ocha_key_figures\Controller\RWCrisisKeyFiguresController

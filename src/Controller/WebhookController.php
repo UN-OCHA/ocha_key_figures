@@ -2,11 +2,13 @@
 
 namespace Drupal\ocha_key_figures\Controller;
 
+use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\group\Entity\Group;
+use Drupal\ocha_key_figures\Event\KeyFiguresUpdated;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -31,11 +33,19 @@ class WebhookController extends ControllerBase {
   protected $entityTypeManager;
 
   /**
+   * The event dispatcher.
+   *
+   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   */
+  protected $eventDispatcher;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(LoggerChannelFactoryInterface $logger_factory, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(LoggerChannelFactoryInterface $logger_factory, EntityTypeManagerInterface $entity_type_manager, ContainerAwareEventDispatcher $event_dispatcher) {
     $this->loggerFactory = $logger_factory;
     $this->entityTypeManager = $entity_type_manager;
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -86,7 +96,7 @@ class WebhookController extends ControllerBase {
 
       if (!empty($ids)) {
         $bundles = [];
-        $groups = [];
+        $data = [];
 
         /** @var \Drupal\paragraphs\Entity\Paragraph[] $paragraphs */
         $paragraphs = $this->entityTypeManager->getStorage('paragraph')->loadMultiple($ids);
@@ -101,18 +111,21 @@ class WebhookController extends ControllerBase {
           // Get group to send emails.
           $parent = $paragraph->getParentEntity();
           if ($parent && $parent instanceof Group) {
-            if (!isset($groups[$parent->id()])) {
-              $groups[$parent->id()] = [
+            if (!isset($data[$parent->getEntityTypeId()])) {
+              $data[$parent->getEntityTypeId()] = [];
+            }
+            if (!isset($data[$parent->id()])) {
+              $data[$parent->getEntityTypeId()][$parent->id()] = [
                 'new' => [],
                 'updated' => [],
               ];
             }
 
             if ($is_new) {
-              $groups[$parent->id()]['new'][$record['data']['id']] = $record;
+              $data[$parent->getEntityTypeId()][$parent->id()]['new'][$record['data']['id']] = $record;
             }
             else {
-              $groups[$parent->id()]['updated'][$record['data']['id']] = $record;
+              $data[$parent->getEntityTypeId()][$parent->id()]['updated'][$record['data']['id']] = $record;
             }
           }
         }
@@ -121,6 +134,10 @@ class WebhookController extends ControllerBase {
           $controller = ocha_key_figures_load_keyfigure_controller($bundle);
           $controller->invalidateCache();
         }
+
+        // Get the event_dispatcher service and dispatch the event.
+        $event = new KeyFiguresUpdated($data);
+        $this->eventDispatcher->dispatch($event, KeyFiguresUpdated::EVENT_UPDATED);
       }
     }
 
