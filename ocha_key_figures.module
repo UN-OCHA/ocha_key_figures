@@ -46,16 +46,6 @@ function ocha_key_figures_preprocess_paragraph__reliefweb_key_figures(&$variable
   /** @var \Drupal\ocha_key_figures\Controller\RWCrisisKeyFiguresController */
   $controller = \Drupal::service('ocha_key_figures.rw_key_figures_controller');
 
-  $paragraph = $variables['paragraph'];
-  if ($paragraph->hasField('field_country') && !$paragraph->field_country->isEmpty()) {
-    $iso3 = $paragraph->field_country->value;
-
-    $variables['view_all'] = TRUE;
-    $variables['view_all_info'] = [
-      'href' => 'https://reliefweb.int/country/' . $iso3 . '?figures=all#key-figures',
-    ];
-  }
-
   ocha_key_figures_keyfigures($variables, $controller);
 }
 
