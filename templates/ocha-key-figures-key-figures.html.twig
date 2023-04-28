@@ -37,8 +37,10 @@
   </footer>
   {% endif %}
 
+  {% if jsonld is not empty %}
   <script type="application/ld+json">
     {{ jsonld|raw }}
   </script>
+  {% endif %}
 
 </div>{# .ocha-key-figures #}

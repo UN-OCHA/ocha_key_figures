@@ -171,7 +171,7 @@ function ocha_key_figures_preprocess_paragraph__featured_numbers(&$variables) {
       '#view_all' => $view_all,
       '#weight' => 99,
       '#cache' => [
-        'max-age' => 12 * 60 * 60,
+        'max-age' => ocha_key_figures_get_max_age(),
       ],
     ];
   }
@@ -301,13 +301,6 @@ function ocha_key_figures_keyfigures(&$variables, BaseKeyFiguresController $cont
     return;
   }
 
-  // Initialize data for JSON-LD.
-  $json_data = [];
-  foreach ($data as $row) {
-    $json_data[$row['name']] = $row['value'];
-  }
-
-  // Add metadata to JSON-LD.
   // Fetch country from user input.
   $iso3 = $paragraph->field_country->value;
 
@@ -330,34 +323,47 @@ function ocha_key_figures_keyfigures(&$variables, BaseKeyFiguresController $cont
     }
   }
 
-  $name = t('@title of @country', [
-    '@title' => $paragraph->field_title->value ?? 'Key figures',
-    '@country' => $country,
-  ]);
-  $description = t('Easily discoverable topline numbers for humanitarian crises in @country', [
-    '@country' => $country,
-  ]);
+  // Add JSON-LD.
+  $json_ld = [];
 
-  $metadata = ocha_key_figures_metadata_by_type($paragraph->bundle());
-  $metadata += [
-    'name' => $name,
-    'short_name' => $paragraph->field_title->value ?? 'Key figures',
-    'spatialCoverage' => $country,
-    'description' => $description,
-    'temporalCoverage' => $year === FALSE ? '2000-01-01/..' : $year,
-  ];
+  if (\Drupal::config('ocha_key_figures.settings')->get('enable_json_ld')) {
+    // Initialize data for JSON-LD.
+    $json_data = [];
+    foreach ($data as $row) {
+      $json_data[$row['name']] = $row['value'];
+    }
+
+    $name = t('@title of @country', [
+      '@title' => $paragraph->field_title->value ?? 'Key figures',
+      '@country' => $country,
+    ]);
+    $description = t('Easily discoverable topline numbers for humanitarian crises in @country', [
+      '@country' => $country,
+    ]);
+
+    $metadata = ocha_key_figures_metadata_by_type($paragraph->bundle());
+    $metadata += [
+      'name' => $name,
+      'short_name' => $paragraph->field_title->value ?? 'Key figures',
+      'spatialCoverage' => $country,
+      'description' => $description,
+      'temporalCoverage' => $year === FALSE ? '2000-01-01/..' : $year,
+    ];
+
+    $json_ld = ocha_key_figures_add_jsonld_data($metadata, $json_data);
+  }
 
   $variables['content']['key_figures'] = [
     '#theme' => 'ocha_key_figures_key_figures',
     '#country_iso' => $iso3,
     '#country_name' => $country,
     '#data' => $data,
-    '#jsonld' => ocha_key_figures_add_jsonld_data($metadata, $json_data),
+    '#jsonld' => $json_ld,
     '#view_all' => $view_all,
     '#view_all_info' => $view_all_info,
     '#weight' => 99,
     '#cache' => [
-      'max-age' => 12 * 60 * 60,
+      'max-age' => ocha_key_figures_get_max_age(),
     ],
   ];
 }
@@ -824,4 +830,21 @@ function ocha_key_figures_load_source_countries_callback(array $form, $form_stat
   }
 
   return $form['field_country'];
+}
+
+/**
+ * Returns the maximum age (in seconds) for cached OCHA key figures.
+ *
+ * If the 'max_age' setting is defined in the OCHA key figures configuration,
+ * this value is returned. Otherwise, a default value of 12 hours is used.
+ *
+ * @return int
+ *   The maximum age for cached OCHA key figures.
+ */
+function ocha_key_figures_get_max_age() {
+  if ($max_age = \Drupal::config('ocha_key_figures.settings')->get('max_age')) {
+    return $max_age;
+  }
+
+  return 12 * 60 * 60;
 }

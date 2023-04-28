@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\group\Entity\Group;
 use Drupal\ocha_key_figures\Event\KeyFiguresUpdated;
+use Drupal\paragraphs\Entity\Paragraph;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -64,7 +65,7 @@ class WebhookController extends ControllerBase {
 
     foreach ($params['data'] as $record) {
       $is_new = $record['status'] == 'new';
-      $ids = [];
+      $paragraph_ids = [];
 
       if ($is_new) {
         // All numbers.
@@ -73,7 +74,7 @@ class WebhookController extends ControllerBase {
           ->condition('field_year', $record['data']['year'])
           ->notExists('field_figures');
 
-        $ids = $query->execute();
+        $paragraph_ids = $query->execute();
       }
       else {
         // Individual numbers.
@@ -82,7 +83,7 @@ class WebhookController extends ControllerBase {
           ->condition('field_country', $record['data']['iso3'])
           ->condition('field_year', $record['data']['year']);
 
-        $ids = $query->execute();
+        $paragraph_ids = $query->execute();
 
         // All numbers.
         $query = $this->entityTypeManager->getStorage('paragraph')->getQuery();
@@ -90,8 +91,8 @@ class WebhookController extends ControllerBase {
           ->condition('field_year', $record['data']['year'])
           ->notExists('field_figures');
 
-        $ids_all = $query->execute();
-        $ids = array_merge($ids, $ids_all);
+        $paragraph_ids_all = $query->execute();
+        $paragraph_ids = array_merge($paragraph_ids, $paragraph_ids_all);
       }
 
       if (!empty($ids)) {
@@ -108,25 +109,28 @@ class WebhookController extends ControllerBase {
           // Track bundles.
           $bundles[$paragraph->bundle()] = $paragraph->bundle();
 
-          // Get group to send emails.
-          $parent = $paragraph->getParentEntity();
-          if ($parent && $parent instanceof Group) {
-            if (!isset($data[$parent->getEntityTypeId()])) {
-              $data[$parent->getEntityTypeId()] = [];
-            }
-            if (!isset($data[$parent->id()])) {
-              $data[$parent->getEntityTypeId()][$parent->id()] = [
-                'new' => [],
-                'updated' => [],
-              ];
-            }
+          // Track parents.
+          $parent = $paragraph;
+          while ($parent && $parent instanceof Paragraph) {
+            $parent = $paragraph->getParentEntity();
+          }
 
-            if ($is_new) {
-              $data[$parent->getEntityTypeId()][$parent->id()]['new'][$record['data']['id']] = $record;
-            }
-            else {
-              $data[$parent->getEntityTypeId()][$parent->id()]['updated'][$record['data']['id']] = $record;
-            }
+          if (!isset($data[$parent->getEntityTypeId()])) {
+            $data[$parent->getEntityTypeId()] = [];
+          }
+
+          if (!isset($data[$parent->getEntityTypeId()][$parent->id()])) {
+            $data[$parent->getEntityTypeId()][$parent->id()] = [
+              'new' => [],
+              'updated' => [],
+            ];
+          }
+
+          if ($is_new) {
+            $data[$parent->getEntityTypeId()][$parent->id()]['new'][$record['data']['id']] = $record;
+          }
+          else {
+            $data[$parent->getEntityTypeId()][$parent->id()]['updated'][$record['data']['id']] = $record;
           }
         }
 
