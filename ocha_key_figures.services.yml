@@ -9,6 +9,9 @@ services:
   ocha_key_figures.fts_figures_controller:
     class: \Drupal\ocha_key_figures\Controller\FtsKeyFiguresController
     arguments: ['@http_client', '@ocha_key_figures.cache']
+  ocha_key_figures.oct_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\OctKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
   ocha_key_figures.idps_figures_controller:
     class: \Drupal\ocha_key_figures\Controller\IdpsKeyFiguresController
     arguments: ['@http_client', '@ocha_key_figures.cache']

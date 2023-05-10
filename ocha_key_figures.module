@@ -62,6 +62,16 @@ function ocha_key_figures_preprocess_paragraph__fts_key_figures(&$variables) {
 /**
  * Implements hook_preprocess_paragraph__type().
  */
+function ocha_key_figures_preprocess_paragraph__oct_key_figures(&$variables) {
+  /** @var \Drupal\ocha_key_figures\Controller\OctKeyFiguresController */
+  $controller = \Drupal::service('ocha_key_figures.oct_figures_controller');
+
+  ocha_key_figures_keyfigures($variables, $controller);
+}
+
+/**
+ * Implements hook_preprocess_paragraph__type().
+ */
 function ocha_key_figures_preprocess_paragraph__idps_key_figures(&$variables) {
   /** @var \Drupal\ocha_key_figures\Controller\IdpsKeyFiguresController */
   $controller = \Drupal::service('ocha_key_figures.idps_figures_controller');
@@ -213,7 +223,9 @@ function ocha_key_figures_get_keyfigure_data(Paragraph $paragraph, BaseKeyFigure
     // Set dollar-sign prefix if data is financial.
     if ($controller->isFinancial()) {
       foreach ($data as &$fig) {
-        $fig['prefix'] = '$';
+        if ($fig['valueType'] == 'numeric') {
+          $fig['prefix'] = '$';
+        }
       }
     }
 
@@ -381,6 +393,9 @@ function ocha_key_figures_load_keyfigure_controller($bundle) {
     case 'fts_key_figures':
       return \Drupal::service('ocha_key_figures.fts_figures_controller');
 
+    case 'oct_key_figures':
+      return \Drupal::service('ocha_key_figures.oct_figures_controller');
+
     case 'idps_key_figures':
       return \Drupal::service('ocha_key_figures.idps_figures_controller');
 
@@ -472,6 +487,25 @@ function ocha_key_figures_allowed_figures(FieldStorageConfig $definition, Conten
  */
 function ocha_key_figures_metadata_by_type(string $bundle) {
   switch ($bundle) {
+    case 'fts_key_figures':
+      return [
+        'publisher' => [
+          '@type' => 'Organization',
+          'sameAs' => 'https://ror.org/00aahzn97',
+          'name' => 'OCHA Contribution Tracking (OCT)',
+        ],
+        'creator' => [
+          '@type' => 'Organization',
+          'sameAs' => 'https://ror.org/00aahzn97',
+          'name' => 'OCHA Contribution Tracking (OCT)',
+        ],
+        'license' => [
+          '@type' => 'CreativeWork',
+          'name' => 'Creative Commons Attribution for Intergovernmental Organisations',
+          'url' => 'https://data.humdata.org/faqs/licenses#auto-faq-_Data_Licenses_Content_-Creative_Commons_Attribution_for_Intergovernmental_Organisations__CC_BY_IGO_-a',
+        ],
+      ];
+
     case 'fts_key_figures':
       return [
         'publisher' => [

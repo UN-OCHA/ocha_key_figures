@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_figures
+    - paragraphs.paragraphs_type.oct_key_figures
+  module:
+    - options
+id: paragraph.oct_key_figures.field_figures
+field_name: field_figures
+entity_type: paragraph
+bundle: oct_key_figures
+label: Figures
+description: 'Select which figures needs to be displayed, if you select none, all will be displayed.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string
+uuid: 14ffb7ca-9e0b-4130-bfb1-6939d718f25c
