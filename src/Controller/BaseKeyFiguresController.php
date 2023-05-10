@@ -418,6 +418,8 @@ class BaseKeyFiguresController extends ControllerBase {
       $countries[$row['value']] = $row['label'];
     }
 
+    asort($countries);
+
     // Cache data.
     $this->cacheBackend->set($cid, $countries, time() + $this->cacheDuration);
 
