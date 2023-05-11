@@ -110,10 +110,10 @@ class BaseKeyFiguresController extends ControllerBase {
 
     $data = $this->getData('', $query);
 
-    foreach ($data as &$row) {
-      $row['date'] = new \DateTime($row['year'] . '-01-01');
+    foreach ($data as $key => $row) {
+      $data[$key]['date'] = new \DateTime($row['year'] . '-01-01');
       if (isset($row['updated']) && !empty($row['updated'])) {
-        $row['date'] = new \DateTime(substr($row['updated'], 0, 10));
+        $data[$key]['date'] = new \DateTime(substr($row['updated'], 0, 10));
       }
     }
 
