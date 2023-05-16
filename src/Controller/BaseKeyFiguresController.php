@@ -464,16 +464,16 @@ class BaseKeyFiguresController extends ControllerBase {
    * @return array
    *   List of suported providers.
    */
-  public static function getSupportedProviders() {
-    return [
-      'fts' => t('FTS'),
-      'cbpf' => t('CBPF'),
-      'cerf' => t('CERF'),
-      'idps' => t('IDPS'),
-      'inform' => t('INFORM'),
-      'inform-risk' => t('INFORM RISK'),
-      'rw-crisis' => t('ReliefWeb Crisis Figures'),
-    ];
+  public function getSupportedProviders() {
+    $options = [];
+    $can_read = $this->getData('me/providers');
+
+    foreach ($can_read as $provider) {
+      $options[$provider['id']] = $provider['name'];
+    }
+
+    asort($options);
+    return $options;
   }
 
 }
