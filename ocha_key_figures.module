@@ -36,6 +36,26 @@ function ocha_key_figures_theme($existing, $type, $theme, $path) {
       'template' => 'checkboxes--layout-paragraphs-component-form--field-figures',
       'render element' => 'element',
     ],
+    'ocha_key_figures_figure_list' => [
+      'variables' => [
+        'attributes' => NULL,
+        'figures' => NULL,
+      ],
+    ],
+    'ocha_key_figures_figure' => [
+      'variables' => [
+        'attributes' => NULL,
+        'label_attributes' => NULL,
+        'value_attributes' => NULL,
+        'unit_attributes' => NULL,
+        'label' => NULL,
+        'value' => NULL,
+        'unit' => NULL,
+        'country' => NULL,
+        'year' => NULL,
+      ],
+    ],
+
   ];
 }
 

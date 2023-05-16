@@ -3,6 +3,9 @@ services:
     class: \Drupal\ocha_key_figures\Controller\WebhookController
     arguments: ['@logger.factory', '@entity_type.manager', '@event_dispatcher']
 
+  ocha_key_figures.key_figures_controller:
+    class: \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController
+    arguments: ['@http_client', '@ocha_key_figures.cache']
   ocha_key_figures.rw_key_figures_controller:
     class: \Drupal\ocha_key_figures\Controller\RWCrisisKeyFiguresController
     arguments: ['@http_client', '@ocha_key_figures.cache']

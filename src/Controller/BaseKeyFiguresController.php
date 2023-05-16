@@ -458,4 +458,22 @@ class BaseKeyFiguresController extends ControllerBase {
     $this->cacheBackend->invalidate($this->cacheId . ':years');
   }
 
+  /**
+   * Get the list of supported figure providers.
+   *
+   * @return array
+   *   List of suported providers.
+   */
+  public static function getSupportedProviders() {
+    return [
+      'fts' => t('FTS'),
+      'cbpf' => t('CBPF'),
+      'cerf' => t('CERF'),
+      'idps' => t('IDPS'),
+      'inform' => t('INFORM'),
+      'inform-risk' => t('INFORM RISK'),
+      'rw-crisis' => t('ReliefWeb Crisis Figures'),
+    ];
+  }
+
 }
