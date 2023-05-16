@@ -18,11 +18,6 @@ class FtsKeyFiguresController extends BaseKeyFiguresController {
   /**
    * {@inheritdoc}
    */
-  protected $financialData = TRUE;
-
-  /**
-   * {@inheritdoc}
-   */
   public function __construct(ClientInterface $http_client, CacheBackendInterface $cache) {
     parent::__construct($http_client, $cache);
 

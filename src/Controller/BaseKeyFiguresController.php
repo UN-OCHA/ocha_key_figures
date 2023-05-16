@@ -57,13 +57,6 @@ class BaseKeyFiguresController extends ControllerBase {
   protected $cacheDuration = 60 * 60;
 
   /**
-   * Financial data.
-   *
-   * @var bool
-   */
-  protected $financialData = FALSE;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(ClientInterface $http_client, CacheBackendInterface $cache) {
@@ -75,13 +68,6 @@ class BaseKeyFiguresController extends ControllerBase {
 
     // Make sure it ends with a slash.
     $this->apiUrl = rtrim($this->apiUrl, '/') . '/';
-  }
-
-  /**
-   * Is financial data.
-   */
-  public function isFinancial() {
-    return $this->financialData;
   }
 
   /**
