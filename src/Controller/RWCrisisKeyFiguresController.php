@@ -41,7 +41,7 @@ class RWCrisisKeyFiguresController extends BaseKeyFiguresController {
       $grouped = TRUE;
     }
 
-    $data = $this->getData('', $query);
+    $data = $this->query('', $query);
 
     // Sort the values by newest first.
     usort($data, function ($a, $b) {

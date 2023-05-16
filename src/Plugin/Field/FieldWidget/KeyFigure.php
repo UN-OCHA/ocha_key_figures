@@ -13,7 +13,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
-use Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure as KeyFigureType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -270,13 +269,16 @@ class KeyFigure extends WidgetBase {
         else {
           $figure_id = isset($figures[$figure_id]) ? $figure_id : NULL;
 
+          $figure_options = array_map(function ($item) {
+            return $item['name'];
+          }, $figures);
+          asort($figure_options);
+
           $element['id'] = [
             '#type' => $manual ? 'hidden' : 'select',
             '#multiple' => FALSE,
             '#title' => $this->t('Id'),
-            '#options' => array_map(function ($item) {
-              return $item['name'];
-            }, $figures),
+            '#options' => $figure_options,
             '#default_value' => $figure_id,
             '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
             '#empty_option' => $this->t('- Select -'),
@@ -339,7 +341,7 @@ class KeyFigure extends WidgetBase {
     if ($provider === 'manual') {
       return [];
     }
-    $data = $this->ochaKeyFiguresApiClient->getData($provider . '/countries');
+    $data = $this->ochaKeyFiguresApiClient->query($provider . '/countries');
     $countries = [];
     if (!empty($data)) {
       foreach ($data as $item) {
@@ -367,7 +369,7 @@ class KeyFigure extends WidgetBase {
     if ($provider === 'manual' && !empty($country)) {
       return [];
     }
-    $data = $this->ochaKeyFiguresApiClient->getData($provider . '/years', [
+    $data = $this->ochaKeyFiguresApiClient->query($provider . '/years', [
       'iso3' => $country,
       'order' => [
         'year' => 'desc',
@@ -401,7 +403,7 @@ class KeyFigure extends WidgetBase {
     if ($provider === 'manual' || empty($country) || empty($year)) {
       return [];
     }
-    $data = $this->ochaKeyFiguresApiClient->getData($provider, [
+    $data = $this->ochaKeyFiguresApiClient->query($provider, [
       'iso3' => $country,
       'year' => $year,
       'archived' => FALSE,

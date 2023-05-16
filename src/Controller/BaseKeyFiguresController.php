@@ -82,6 +82,13 @@ class BaseKeyFiguresController extends ControllerBase {
    *   Raw results.
    */
   public function getKeyFigures(string $iso3, $year = '') : array {
+    $cid = $this->cacheId . ':' . $iso3 . ':' . $year;
+
+    // Return cached data.
+    if ($cache = $this->cacheBackend->get($cid)) {
+      return $cache->data;
+    }
+
     $query = [
       'iso3' => $iso3,
     ];
@@ -126,7 +133,42 @@ class BaseKeyFiguresController extends ControllerBase {
       }
     }
 
+    // Cache data.
+    $this->cacheBackend->set($cid, $results, time() + $this->cacheDuration);
+
     return $results;
+  }
+
+  /**
+   * Query figures.
+   *
+   * @param string $path
+   *   API path.
+   * @param array $query
+   *   Query options.
+   * @param bool $use_cache
+   *   Use caching.
+   *
+   * @return array<string, mixed>
+   *   Raw results.
+   */
+  public function query(string $path, array $query = [], bool $use_cache = TRUE) : array {
+    $cid = $this->cacheId . ':' . md5($path) . ':' . md5(json_encode($query));
+
+    // Return cached data.
+    if ($use_cache && $cache = $this->cacheBackend->get($cid)) {
+      return $cache->data;
+    }
+
+    // Fetch data.
+    $data = $this->getData($path, $query);
+
+    // Cache data.
+    if ($use_cache) {
+      $this->cacheBackend->set($cid, $data, time() + $this->cacheDuration);
+    }
+
+    return $data;
   }
 
   /**
@@ -140,7 +182,7 @@ class BaseKeyFiguresController extends ControllerBase {
    * @return array<string, mixed>
    *   Raw results.
    */
-  public function getData(string $path, array $query = []) : array {
+  protected function getData(string $path, array $query = []) : array {
     $endpoint = $this->apiUrl;
     $api_key = $this->apiKey;
 
@@ -452,10 +494,10 @@ class BaseKeyFiguresController extends ControllerBase {
    */
   public function getSupportedProviders() {
     $options = [];
-    $can_read = $this->getData('me/providers');
+    $can_read = $this->query('me/providers');
 
     foreach ($can_read as $provider) {
-      $options[$provider['id']] = $provider['name'];
+      $options[$provider['prefix']] = $provider['name'];
     }
 
     asort($options);
