@@ -200,7 +200,7 @@ class KeyFigure extends WidgetBase {
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
 
-    // @todo retrieve that from the API client?
+    // Get list of providers.
     $providers = [
       'manual' => $this->t('Manual'),
     ] + $this->ochaKeyFiguresApiClient->getSupportedProviders();
@@ -219,6 +219,7 @@ class KeyFigure extends WidgetBase {
     if (isset($provider) && !$manual) {
       $label = NULL;
       $value = NULL;
+      $unit = NULL;
 
       // Get the list of countries for the provider.
       $countries = $this->getFigureCountries($provider);
@@ -285,6 +286,7 @@ class KeyFigure extends WidgetBase {
           // Preserve the label override.
           $label = $values['label'] ?? $figures[$figure_id]['name'] ?? NULL;
           $value = $figures[$figure_id]['value'] ?? NULL;
+          $unit = $figures[$figure_id]['unit'] ?? NULL;
         }
       }
     }
@@ -311,15 +313,11 @@ class KeyFigure extends WidgetBase {
           '#disabled' => !$manual,
         ];
 
-        // @todo maybe only show if the value is numeric?
-        $units = KeyFigureType::getSupportedUnits();
         $element['unit'] = [
-          '#type' => 'select',
+          '#type' => 'textfield',
           '#title' => $this->t('Unit'),
-          '#options' => $units,
-          '#default_value' => isset($units[$unit]) ? $unit : NULL,
-          '#empty_option' => $this->t('- None -'),
-          '#empty_value' => '',
+          '#default_value' => $unit,
+          '#disabled' => !$manual,
         ];
       }
     }
@@ -348,6 +346,9 @@ class KeyFigure extends WidgetBase {
         $countries[$item['value']] = $item['label'];
       }
     }
+
+    asort($countries);
+
     return $countries;
   }
 
@@ -411,6 +412,9 @@ class KeyFigure extends WidgetBase {
         $figures[$item['id']] = $item;
       }
     }
+
+    asort($figures);
+
     return $figures;
   }
 

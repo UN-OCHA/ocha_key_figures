@@ -91,8 +91,8 @@ class KeyFigure extends FormatterBase {
           '#theme' => 'ocha_key_figures_figure__' . $this->viewMode,
           '#label' => $label,
           '#value' => $value,
-          '#unit' => $item->getFigureUnitLabel(),
-          '#country' => $item->getFigureCountryLabel(),
+          '#unit' => $item->getFigureUnit(),
+          '#country' => $item->getFigureCountry(),
           '#year' => $item->getFigureYear(),
         ];
       }

@@ -229,18 +229,6 @@ class KeyFigure extends FieldItemBase {
   }
 
   /**
-   * Get the figure unit label.
-   *
-   * @return string|null
-   *   Figure unit.
-   */
-  public function getFigureUnitLabel() {
-    $unit = $this->getFigureUnit();
-    $units = $this->getSupportedUnits();
-    return $units[$unit] ?? NULL;
-  }
-
-  /**
    * Get the figure provider.
    *
    * @return string|null
@@ -261,17 +249,6 @@ class KeyFigure extends FieldItemBase {
   }
 
   /**
-   * Get the figure country.
-   *
-   * @return string|null
-   *   Figure country.
-   */
-  public function getFigureCountryLabel() {
-    // @todo do a lookup to retrieve the country name from its ISO3.
-    return $this->getFigureCountry();
-  }
-
-  /**
    * Get the figure year.
    *
    * @return string|null
@@ -289,19 +266,6 @@ class KeyFigure extends FieldItemBase {
    */
   public function getFigureId() {
     return $this->get('id')->getValue() ?? NULL;
-  }
-
-  /**
-   * Get a list of supported units.
-   *
-   * @return array
-   *   Associative array of units.
-   */
-  public static function getSupportedUnits() {
-    return [
-      'us$' => t('US$'),
-      '%' => t('%'),
-    ];
   }
 
   /**
