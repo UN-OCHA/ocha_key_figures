@@ -106,6 +106,46 @@ class KeyFigure extends WidgetBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings() {
+    return [
+      'allow_manual' => 'yes',
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    return [
+      'allow_manual' => [
+        '#type' => 'select',
+        '#options' => [
+          'yes' => $this->t('Yes'),
+          'no' => $this->t('No'),
+        ],
+        '#title' => $this->t('Allow manual numbers'),
+        '#default_value' => $this->getSetting('allow_manual'),
+        '#required' => TRUE,
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+
+    $summary[] = $this->t('Allow manual figures: @allow_manual', [
+      '@allow_manual' => $this->getSetting('allow_manual'),
+    ]);
+
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function handlesMultipleValues() {
     return FALSE;
   }
@@ -193,6 +233,8 @@ class KeyFigure extends WidgetBase {
     $unit = $values['unit'] ?? NULL;
 
     $show_no_data = FALSE;
+
+    $allow_manual = $this->getSetting('allow_manual') == 'yes';
     $manual = $provider === 'manual';
 
     // Add the ajax wrapper.
@@ -200,9 +242,15 @@ class KeyFigure extends WidgetBase {
     $element['#suffix'] = '</div>';
 
     // Get list of providers.
-    $providers = [
-      'manual' => $this->t('Manual'),
-    ] + $this->ochaKeyFiguresApiClient->getSupportedProviders();
+    $providers = [];
+    if ($allow_manual) {
+      $providers = [
+        'manual' => $this->t('Manual'),
+      ] + $this->ochaKeyFiguresApiClient->getSupportedProviders();
+    }
+    else {
+      $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
+    }
 
     $element['provider'] = [
       '#type' => 'select',
@@ -305,6 +353,7 @@ class KeyFigure extends WidgetBase {
           '#type' => 'textfield',
           '#title' => $this->t('Label'),
           '#default_value' => $label,
+          '#access' => $allow_manual,
         ];
       }
       if ($manual || isset($value)) {
@@ -313,6 +362,7 @@ class KeyFigure extends WidgetBase {
           '#title' => $this->t('Value'),
           '#default_value' => $value,
           '#disabled' => !$manual,
+          '#access' => $allow_manual,
         ];
 
         $element['unit'] = [
@@ -320,6 +370,7 @@ class KeyFigure extends WidgetBase {
           '#title' => $this->t('Unit'),
           '#default_value' => $unit,
           '#disabled' => !$manual,
+          '#access' => $allow_manual,
         ];
       }
     }
