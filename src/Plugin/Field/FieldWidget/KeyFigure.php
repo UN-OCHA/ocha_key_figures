@@ -392,7 +392,7 @@ class KeyFigure extends WidgetBase {
     if ($provider === 'manual') {
       return [];
     }
-    $data = $this->ochaKeyFiguresApiClient->query($provider . '/countries');
+    $data = $this->ochaKeyFiguresApiClient->query($provider, 'countries');
     $countries = [];
     if (!empty($data)) {
       foreach ($data as $item) {
@@ -420,7 +420,7 @@ class KeyFigure extends WidgetBase {
     if ($provider === 'manual' && !empty($country)) {
       return [];
     }
-    $data = $this->ochaKeyFiguresApiClient->query($provider . '/years', [
+    $data = $this->ochaKeyFiguresApiClient->query($provider, 'years', [
       'iso3' => $country,
       'order' => [
         'year' => 'desc',
@@ -454,7 +454,7 @@ class KeyFigure extends WidgetBase {
     if ($provider === 'manual' || empty($country) || empty($year)) {
       return [];
     }
-    $data = $this->ochaKeyFiguresApiClient->query($provider, [
+    $data = $this->ochaKeyFiguresApiClient->query($provider, '', [
       'iso3' => $country,
       'year' => $year,
       'archived' => FALSE,

@@ -1,8 +1,0 @@
-<div{{ attributes.addClass('form-checkboxes') }}>
-    {% for key, child in element if key|first != '#' %}
-        <div class="form-checkboxes--checkbox">
-            <div class="form-checkboxes--child">{{ child }}</div>
-            <div class="form-checkboxes--extra"></div>
-        </div>
-    {% endfor %}
-</div>

@@ -79,7 +79,7 @@ class KeyFigureCondensed extends KeyFigureBase {
 
         if ($item->getFigureProvider() != 'manual') {
           if (empty($value)) {
-            $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider() . '/' . $item->getFigureId());
+            $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider(), $item->getFigureId());
             $value = $data['value'];
             $unit = $data['unit'] ?? '';
           }

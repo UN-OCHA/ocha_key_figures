@@ -84,7 +84,7 @@ class BaseKeyFiguresController extends ControllerBase {
    *   Raw results.
    */
   public function getKeyFigures(string $provider, string $iso3, $year = '', $show_all = FALSE) : array {
-    $cid = $this->cacheId . ':' . $iso3 . ':' . $year;
+    $cid = $this->cacheId . ':' . $provider . ':' . $iso3 . ':' . $year;
 
     // Return cached data.
     if ($cache = $this->cacheBackend->get($cid)) {
@@ -158,8 +158,8 @@ class BaseKeyFiguresController extends ControllerBase {
    * @return array<string, mixed>
    *   Raw results.
    */
-  public function query(string $path, array $query = [], bool $use_cache = TRUE) : array {
-    $cid = $this->cacheId . ':' . md5($path) . ':' . md5(json_encode($query));
+  public function query(string $provider, string $path, array $query = [], bool $use_cache = TRUE) : array {
+    $cid = $this->cacheId . ':' . $provider . md5($path) . ':' . md5(json_encode($query));
 
     // Return cached data.
     if ($use_cache && $cache = $this->cacheBackend->get($cid)) {
@@ -167,7 +167,7 @@ class BaseKeyFiguresController extends ControllerBase {
     }
 
     // Fetch data.
-    $data = $this->getData($path, $query);
+    $data = $this->getData($provider . '/' . $path, $query);
 
     // Cache data.
     if ($use_cache) {
@@ -437,8 +437,8 @@ class BaseKeyFiguresController extends ControllerBase {
   /**
    * Get countries.
    */
-  public function getCountries() {
-    $cid = $this->cacheId . ':countries';
+  public function getCountries(string $provider) {
+    $cid = $this->cacheId . ':' . $provider . ':countries';
 
     // Return cached data.
     if ($cache = $this->cacheBackend->get($cid)) {
@@ -463,8 +463,8 @@ class BaseKeyFiguresController extends ControllerBase {
   /**
    * Get countries.
    */
-  public function getYears() {
-    $cid = $this->cacheId . ':years';
+  public function getYears(string $provider) {
+    $cid = $this->cacheId . ':' . $provider . ':years';
 
     // Return cached data.
     if ($cache = $this->cacheBackend->get($cid)) {
@@ -499,7 +499,7 @@ class BaseKeyFiguresController extends ControllerBase {
    */
   public function getSupportedProviders() {
     $options = [];
-    $can_read = $this->query('me/providers');
+    $can_read = $this->query('me', 'providers');
 
     foreach ($can_read as $provider) {
       $options[$provider['prefix']] = $provider['name'];

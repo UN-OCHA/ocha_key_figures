@@ -316,7 +316,10 @@ class KeyFigureMultiple extends WidgetBase {
           $element['sort_order'] = [
             '#type' => 'textarea',
             '#title' => $this->t('Sort order'),
-            '#default_value' => implode($this->separator, array_keys($figure_options))
+            '#default_value' => implode($this->separator, array_keys($figure_options)),
+            '#wrapper_attributes' => [
+              'class' => ['hidden'],
+            ],
           ];
 
           $element['sort_order']['#attached']['library'][] = 'ocha_key_figures/admin';
@@ -399,7 +402,7 @@ class KeyFigureMultiple extends WidgetBase {
    *   values.
    */
   protected function getFigureCountries($provider) {
-    $data = $this->ochaKeyFiguresApiClient->query($provider . '/countries');
+    $data = $this->ochaKeyFiguresApiClient->query($provider, 'countries');
     $countries = [];
     if (!empty($data)) {
       foreach ($data as $item) {
@@ -424,7 +427,7 @@ class KeyFigureMultiple extends WidgetBase {
    *   Associative array with year as keys and values.
    */
   protected function getFigureYears($provider, $country) {
-    $data = $this->ochaKeyFiguresApiClient->query($provider . '/years', [
+    $data = $this->ochaKeyFiguresApiClient->query($provider, 'years', [
       'iso3' => $country,
       'order' => [
         'year' => 'desc',
@@ -455,7 +458,7 @@ class KeyFigureMultiple extends WidgetBase {
    *   Associative array keyed by figure ID and with figures data as values.
    */
   protected function getFigures($provider, $country, $year) {
-    $data = $this->ochaKeyFiguresApiClient->query($provider, [
+    $data = $this->ochaKeyFiguresApiClient->query($provider, '', [
       'iso3' => $country,
       'year' => $year,
       'archived' => FALSE,

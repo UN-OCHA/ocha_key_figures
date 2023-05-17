@@ -103,71 +103,7 @@ class KeyFigureBase extends FormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $format = $this->getSetting('format');
-    $precision = $this->getSetting('precision');
-    $theme_suggestions = implode('__', [
-      $this->viewMode,
-      $items->getEntity()->getEntityTypeId(),
-      $items->getEntity()->bundle(),
-      $items->getFieldDefinition()->getName(),
-    ]);
-
-    $elements = [
-      '#theme' => 'ocha_key_figures_figure_list__' . $theme_suggestions,
-    ];
-
-    $fetch_all = FALSE;
-    foreach ($items as $delta => $item) {
-      if ($item->getFigureId() == '_all') {
-        $fetch_all = TRUE;
-        break;
-      }
-    }
-
-    if ($fetch_all) {
-      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $first */
-      $first = $items->first();
-      $figures = $this->getFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
-      foreach ($figures as $figure) {
-        $value = NumberFormatter::format($figure['value'], $langcode, $format, $precision, FALSE);
-        $elements['#figures'][] = [
-          '#theme' => 'ocha_key_figures_figure__' . $theme_suggestions,
-          '#label' => $figure['name'],
-          '#value' => $value,
-          '#unit' => $figure['unit'],
-          '#country' => $figure['country'],
-          '#year' => $figure['year'],
-        ];
-      }
-    }
-    else {
-      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $item */
-      foreach ($items as $delta => $item) {
-        $label = $item->getFigureLabel();
-        $value = $item->getFigureValue();
-        $unit = $item->getFigureUnit();
-
-        if ($item->getFigureProvider() != 'manual') {
-          if (empty($value)) {
-            $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider() . '/' . $item->getFigureId());
-            $value = $data['value'];
-            $unit = $data['unit'] ?? '';
-          }
-        }
-
-        if (isset($label, $value)) {
-          $value = NumberFormatter::format($value, $langcode, $format, $precision, FALSE);
-          $elements['#figures'][$delta] = [
-            '#theme' => 'ocha_key_figures_figure__' . $this->viewMode,
-            '#label' => $label,
-            '#value' => $value,
-            '#unit' => $unit,
-            '#country' => $item->getFigureCountry(),
-            '#year' => $item->getFigureYear(),
-          ];
-        }
-      }
-    }
+    $elements = [];
 
     return $elements;
   }
@@ -186,7 +122,7 @@ class KeyFigureBase extends FormatterBase {
    *   Associative array keyed by figure ID and with figures data as values.
    */
   protected function getFigures($provider, $country, $year) {
-    $data = $this->ochaKeyFiguresApiClient->query($provider, [
+    $data = $this->ochaKeyFiguresApiClient->query($provider, '', [
       'iso3' => $country,
       'year' => $year,
       'archived' => FALSE,
