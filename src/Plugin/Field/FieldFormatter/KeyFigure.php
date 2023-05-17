@@ -107,34 +107,91 @@ class KeyFigure extends FormatterBase {
       '#theme' => 'ocha_key_figures_figure_list__' . $this->viewMode,
     ];
 
-    /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $item */
+    $fetch_all = FALSE;
     foreach ($items as $delta => $item) {
-      $label = $item->getFigureLabel();
-      $value = $item->getFigureValue();
-      $unit = $item->getFigureUnit();
-
-      if ($item->getFigureProvider() != 'manual') {
-        if (empty($value)) {
-          $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider() . '/' . $item->getFigureId());
-          $value = $data['value'];
-          $unit = $data['unit'] ?? '';
-        }
+      if ($item->getFigureId() == '_all') {
+        $fetch_all = TRUE;
+        break;
       }
+    }
 
-      if (isset($label, $value)) {
-        $value = NumberFormatter::format($value, $langcode, $format, $precision, FALSE);
-        $elements['#figures'][$delta] = [
+    if ($fetch_all) {
+      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $first */
+      $first = $items->first();
+      $figures = $this->getFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
+      foreach ($figures as $figure) {
+        $value = NumberFormatter::format($figure['value'], $langcode, $format, $precision, FALSE);
+        $elements['#figures'][] = [
           '#theme' => 'ocha_key_figures_figure__' . $this->viewMode,
-          '#label' => $label,
+          '#label' => $figure['name'],
           '#value' => $value,
-          '#unit' => $unit,
-          '#country' => $item->getFigureCountry(),
-          '#year' => $item->getFigureYear(),
+          '#unit' => $figure['unit'],
+          '#country' => $figure['country'],
+          '#year' => $figure['year'],
         ];
+      }
+    }
+    else {
+      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $item */
+      foreach ($items as $delta => $item) {
+        $label = $item->getFigureLabel();
+        $value = $item->getFigureValue();
+        $unit = $item->getFigureUnit();
+
+        if ($item->getFigureProvider() != 'manual') {
+          if (empty($value)) {
+            $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider() . '/' . $item->getFigureId());
+            $value = $data['value'];
+            $unit = $data['unit'] ?? '';
+          }
+        }
+
+        if (isset($label, $value)) {
+          $value = NumberFormatter::format($value, $langcode, $format, $precision, FALSE);
+          $elements['#figures'][$delta] = [
+            '#theme' => 'ocha_key_figures_figure__' . $this->viewMode,
+            '#label' => $label,
+            '#value' => $value,
+            '#unit' => $unit,
+            '#country' => $item->getFigureCountry(),
+            '#year' => $item->getFigureYear(),
+          ];
+        }
       }
     }
 
     return $elements;
+  }
+
+  /**
+   * Get the figures available for the figure provider, country and year.
+   *
+   * @param string $provider
+   *   Provider.
+   * @param string $country
+   *   ISO3 code of a country.
+   * @param string $year
+   *   Year.
+   *
+   * @return array
+   *   Associative array keyed by figure ID and with figures data as values.
+   */
+  protected function getFigures($provider, $country, $year) {
+    $data = $this->ochaKeyFiguresApiClient->query($provider, [
+      'iso3' => $country,
+      'year' => $year,
+      'archived' => FALSE,
+    ]);
+    $figures = [];
+    if (!empty($data)) {
+      foreach ($data as $item) {
+        $figures[$item['id']] = $item;
+      }
+    }
+
+    asort($figures);
+
+    return $figures;
   }
 
 }

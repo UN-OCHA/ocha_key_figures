@@ -31,6 +31,11 @@ use Symfony\Component\HttpFoundation\Request;
 class KeyFigureMultiple extends WidgetBase {
 
   /**
+   * Separator used by PHP and js.
+   */
+  protected $separator = '|-|';
+
+  /**
    * The logger service.
    *
    * @var \Psr\Log\LoggerInterface
@@ -203,9 +208,6 @@ class KeyFigureMultiple extends WidgetBase {
     $country = $values['country'] ?? NULL;
     $year = $values['year'] ?? NULL;
     $figure_ids = $values['id'] ?? [];
-    $label = $values['label'] ?? NULL;
-    $value = $values['value'] ?? NULL;
-    $unit = $values['unit'] ?? NULL;
 
     $show_no_data = FALSE;
 
@@ -275,14 +277,25 @@ class KeyFigureMultiple extends WidgetBase {
           $show_no_data = TRUE;
         }
         else {
-          if (!empty($values['id'])) {
-            $figure_ids = array_diff_key($values['id'], $figures);
+          if (!empty($figure_ids)) {
+            $figure_ids = array_diff_key($figure_ids, $figures);
           }
 
-          $figure_options = array_map(function ($item) {
-            return $item['name'];
-          }, $figures);
-          asort($figure_options);
+          // Add options in order.
+          $figure_options = [];
+          foreach ($figure_ids as $figure_id) {
+            $figure_options[$figure_id] = $figures[$figure_id]['name'];
+            unset($figures[$figure_id]);
+          }
+
+          foreach ($figures as $figure_id => $figure) {
+            $figure_options[$figure_id] = $figure['name'];
+          }
+
+          // Add an "all" option.
+          $figure_options = [
+            '_all' => $this->t('Display all')
+          ] + $figure_options;
 
           $element['id'] = [
             '#type' => 'checkboxes',
@@ -298,6 +311,7 @@ class KeyFigureMultiple extends WidgetBase {
           $element['sort_order'] = [
             '#type' => 'textarea',
             '#title' => $this->t('Sort order'),
+            '#default_value' => implode($this->separator, array_keys($figure_options))
           ];
 
           $element['sort_order']['#attached']['library'][] = 'ocha_key_figures/admin';
@@ -335,14 +349,26 @@ class KeyFigureMultiple extends WidgetBase {
       return [];
     }
 
+    $sort_order = explode($this->separator, $values['sort_order']);
     $figures = $this->getFigures($values['provider'], $values['country'], $values['year']);
 
     $ids = $values['id'];
     $ids = array_filter($ids);
+    $ids = array_intersect($sort_order, $ids);
 
     $data = [];
     foreach ($ids as $id) {
-      if (isset($figures[$id])) {
+      if ($id == '_all') {
+        $data[] = [
+          'provider' => $values['provider'],
+          'country' => $values['country'],
+          'year' => $values['year'],
+          'id' => $id,
+          'value' => '_all',
+          'label' => '_all',
+        ];
+      }
+      elseif (isset($figures[$id])) {
         $data[] = [
           'provider' => $values['provider'],
           'country' => $values['country'],
