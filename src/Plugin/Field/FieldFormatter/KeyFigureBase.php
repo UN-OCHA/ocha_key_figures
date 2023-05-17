@@ -45,6 +45,8 @@ class KeyFigureBase extends FormatterBase {
     return [
       'format' => 'decimal',
       'precision' => 1,
+      'display_sparklines' => 'no',
+      'output_json_ld' => 'no',
     ] + parent::defaultSettings();
   }
 
@@ -69,13 +71,24 @@ class KeyFigureBase extends FormatterBase {
         1, 1.23 million with a precision of 2. Defaults to 1.'),
     ];
 
-    $elements['display_source'] = [
+    $elements['display_sparklines'] = [
       '#type' => 'select',
-      '#title' => $this->t('Displa'),
-      '#options' => array_combine(range(1, 5), range(1, 5)),
-      '#default_value' => $this->getSetting('precision') ?? 1,
-      '#description' => $this->t('Number of decimal digits in compact form: 1.2 million with a precision of
-        1, 1.23 million with a precision of 2. Defaults to 1.'),
+      '#title' => $this->t('Display sparklines'),
+      '#options' => [
+        'no' => $this->t('No'),
+        'yes' => $this->t('Yes'),
+      ],
+      '#default_value' => $this->getSetting('display_sparklines') ?? 'no',
+    ];
+
+    $elements['output_json_ld'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Output Json Ld'),
+      '#options' => [
+        'no' => $this->t('No'),
+        'yes' => $this->t('Yes'),
+      ],
+      '#default_value' => $this->getSetting('output_json_ld') ?? 'no',
     ];
 
     return $elements;
@@ -94,6 +107,12 @@ class KeyFigureBase extends FormatterBase {
     ]);
     $summary[] = $this->t('Precision: @value', [
       '@value' => $this->getSetting('precision') ?? 1,
+    ]);
+    $summary[] = $this->t('Display sparklines: @value', [
+      '@value' => $this->getSetting('display_sparklines') ?? 'no',
+    ]);
+    $summary[] = $this->t('Output Json Ld: @value', [
+      '@value' => $this->getSetting('output_json_ld') ?? 'no',
     ]);
 
     return $summary;

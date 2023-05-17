@@ -5,11 +5,6 @@
  * Themes and preprocessors for the paragraphs page title module.
  */
 
-use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
-use Drupal\paragraphs\Entity\Paragraph;
-
 /**
  * Implements hook_theme().
  */
@@ -20,6 +15,7 @@ function ocha_key_figures_theme($existing, $type, $theme, $path) {
         'attributes' => NULL,
         'view_all' => NULL,
         'view_all_info' => NULL,
+        'jsonld' => NULL,
         'figures' => NULL,
       ],
     ],
