@@ -256,7 +256,15 @@ class KeyFigureMultiple extends WidgetBase {
           $show_no_data = TRUE;
         }
         else {
-          $year = isset($years[$year]) ? $year : NULL;
+          if ($year > 2) {
+            $year = isset($years[$year]) ? $year : NULL;
+          }
+
+          // Add option for current year and any year.
+          $years = [
+            '1' => $this->t('Any year'),
+            '2' => $this->t('Current year'),
+          ] + $years;
 
           $element['year'] = [
             '#type' => 'select',
@@ -458,11 +466,22 @@ class KeyFigureMultiple extends WidgetBase {
    *   Associative array keyed by figure ID and with figures data as values.
    */
   protected function getFigures($provider, $country, $year) {
-    $data = $this->ochaKeyFiguresApiClient->query($provider, '', [
+    $query = [
       'iso3' => $country,
       'year' => $year,
       'archived' => FALSE,
-    ]);
+    ];
+
+    // Special case for year.
+    if ($year == 1) {
+      // No need to filter.
+      unset($query['year']);
+    }
+    elseif ($year == 2) {
+      $query['year'] = date('Y');
+    }
+
+    $data = $this->ochaKeyFiguresApiClient->query($provider, '', $query);
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {

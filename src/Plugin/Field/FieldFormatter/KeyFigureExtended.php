@@ -45,22 +45,41 @@ class KeyFigureExtended extends KeyFigureBase {
     ];
 
     $fetch_all = FALSE;
+    $figure_names = [];
     foreach ($items as $delta => $item) {
       if ($item->getFigureId() == '_all') {
         $fetch_all = TRUE;
-        break;
+      }
+      else {
+        $figure_names[$item->getFigureLabel()] = $item->getFigureLabel();
       }
     }
 
     /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $first */
     $first = $items->first();
+    $year = $first->getFigureYear();
+    $sparklines = FALSE;
+    if ($this->getSetting('display_sparklines') == 'yes') {
+      $sparklines = TRUE;
+      $year = '';
+    }
 
     // Get the data.
-    $results = $this->ochaKeyFiguresApiClient->getKeyFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
+    $results = $this->ochaKeyFiguresApiClient->getKeyFigures($first->getFigureProvider(), $first->getFigureCountry(), $year);
+
+    // If not _all, filter items.
+    $filtered_results = $results;
+    if (!$fetch_all) {
+      $filtered_results = [];
+      foreach ($figure_names as $figure_name) {
+        if (isset($results[$figure_name])) {
+          $filtered_results[$figure_name] = $results[$figure_name];
+        }
+      }
+    }
 
     // Build figures.
-    $sparklines = FALSE;
-    $data = $this->ochaKeyFiguresApiClient->buildKeyFigures($results, $sparklines);
+    $data = $this->ochaKeyFiguresApiClient->buildKeyFigures($filtered_results, $sparklines);
     if (empty($data)) {
       return FALSE;
     }
@@ -79,11 +98,6 @@ class KeyFigureExtended extends KeyFigureBase {
       if (isset($fig['valueType']) && $fig['valueType'] == 'percentage') {
         $fig['suffix'] = $fig['unit'] ?? '%';
       }
-    }
-
-    // If not _all, filter items.
-    if (!$fetch_all) {
-
     }
 
     $json_ld = NULL;

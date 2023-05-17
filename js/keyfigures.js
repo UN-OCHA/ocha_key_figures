@@ -8,7 +8,8 @@
   Drupal.behaviors.ochaKeyFigures = {
     attach: function (context) {
       let separator = '|-|';
-      let figures = context.querySelector('[data-drupal-selector="edit-field-figures-id"]');
+      let figures = context.querySelector('[data-drupal-selector="edit-field-multifigures-id"]');
+
       if (!figures) {
         return;
       }
@@ -28,7 +29,7 @@
            * @returns {Array}
            */
           get: function (sortable) {
-            var storage = context.querySelector('[data-drupal-selector="edit-field-figures-sort-order"]');
+            var storage = context.querySelector('[data-drupal-selector="edit-field-multifigures-sort-order"]');
             var order = storage.value;
             return order ? order.split(separator) : [];
           },
@@ -39,7 +40,7 @@
            */
           set: function (sortable) {
             var order = sortable.toArray();
-            var storage = context.querySelector('[data-drupal-selector="edit-field-figures-sort-order"]');
+            var storage = context.querySelector('[data-drupal-selector="edit-field-multifigures-sort-order"]');
             storage.value = order.join(separator);
           }
         }

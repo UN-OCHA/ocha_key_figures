@@ -93,18 +93,22 @@ class BaseKeyFiguresController extends ControllerBase {
 
     $query = [
       'iso3' => $iso3,
+      'year' => $year,
     ];
 
     if (!$show_all) {
       $query['archived'] = FALSE;
     }
 
+    // Special case for year.
     $grouped = FALSE;
-    if ($year) {
-      $query['year'] = $year;
-    }
-    else {
+    if (empty($year) || $year == 1) {
+      // No need to filter.
+      unset($query['year']);
       $grouped = TRUE;
+    }
+    elseif ($year == 2) {
+      $query['year'] = date('Y');
     }
 
     $data = $this->getData($provider, $query);
