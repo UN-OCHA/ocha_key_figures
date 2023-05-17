@@ -284,6 +284,10 @@ class KeyFigureMultiple extends WidgetBase {
           // Add options in order.
           $figure_options = [];
           foreach ($figure_ids as $figure_id) {
+            if ($figure_id == '_all') {
+              continue;
+            }
+
             $figure_options[$figure_id] = $figures[$figure_id]['name'];
             unset($figures[$figure_id]);
           }
@@ -300,12 +304,13 @@ class KeyFigureMultiple extends WidgetBase {
           $element['id'] = [
             '#type' => 'checkboxes',
             '#multiple' => TRUE,
-            '#title' => $this->t('Id'),
+            '#title' => $this->t('Key Figures'),
             '#options' => $figure_options,
             '#default_value' => $figure_ids,
             '#attributes' => [
               'class' => ['ocha-key-figures__list'],
             ],
+            '#description' => $this->t('Drag and drop the figures to change their display order'),
           ];
 
           $element['sort_order'] = [

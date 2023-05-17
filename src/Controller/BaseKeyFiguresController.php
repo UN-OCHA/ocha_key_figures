@@ -77,11 +77,13 @@ class BaseKeyFiguresController extends ControllerBase {
    *   ISO3 of the country we want Key Figures for.
    * @param string $year
    *   Optional year.
+   * @param string $show_all
+   *   Show also archived figures.
    *
    * @return array<string, mixed>
    *   Raw results.
    */
-  public function getKeyFigures(string $iso3, $year = '') : array {
+  public function getKeyFigures(string $provider, string $iso3, $year = '', $show_all = FALSE) : array {
     $cid = $this->cacheId . ':' . $iso3 . ':' . $year;
 
     // Return cached data.
@@ -93,6 +95,10 @@ class BaseKeyFiguresController extends ControllerBase {
       'iso3' => $iso3,
     ];
 
+    if (!$show_all) {
+      $query['archived'] = FALSE;
+    }
+
     $grouped = FALSE;
     if ($year) {
       $query['year'] = $year;
@@ -101,7 +107,7 @@ class BaseKeyFiguresController extends ControllerBase {
       $grouped = TRUE;
     }
 
-    $data = $this->getData('', $query);
+    $data = $this->getData($provider, $query);
 
     foreach ($data as $key => $row) {
       $data[$key]['date'] = new \DateTime($row['year'] . '-01-01');

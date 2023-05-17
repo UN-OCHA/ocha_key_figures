@@ -11,17 +11,9 @@ use Drupal\ocha_key_figures\Helpers\NumberFormatter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Plugin implementation of the 'key_figure' formatter.
- *
- * @FieldFormatter(
- *   id = "key_figure",
- *   label = @Translation("Key Figure"),
- *   field_types = {
- *     "key_figure"
- *   }
- * )
+ * Base class of the 'key_figure' formatter.
  */
-class KeyFigure extends FormatterBase {
+class KeyFigureBase extends FormatterBase {
 
   /**
    * The OCHA Key Figures API client.
@@ -67,6 +59,7 @@ class KeyFigure extends FormatterBase {
       '#default_value' => $this->getSetting('format') ?? 'decimal',
       '#description' => $this->t('Format for the numeric figures.'),
     ];
+
     $elements['precision'] = [
       '#type' => 'select',
       '#title' => $this->t('Precision'),
@@ -75,6 +68,16 @@ class KeyFigure extends FormatterBase {
       '#description' => $this->t('Number of decimal digits in compact form: 1.2 million with a precision of
         1, 1.23 million with a precision of 2. Defaults to 1.'),
     ];
+
+    $elements['display_source'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Displa'),
+      '#options' => array_combine(range(1, 5), range(1, 5)),
+      '#default_value' => $this->getSetting('precision') ?? 1,
+      '#description' => $this->t('Number of decimal digits in compact form: 1.2 million with a precision of
+        1, 1.23 million with a precision of 2. Defaults to 1.'),
+    ];
+
     return $elements;
   }
 
@@ -102,9 +105,15 @@ class KeyFigure extends FormatterBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $format = $this->getSetting('format');
     $precision = $this->getSetting('precision');
+    $theme_suggestions = implode('__', [
+      $this->viewMode,
+      $items->getEntity()->getEntityTypeId(),
+      $items->getEntity()->bundle(),
+      $items->getFieldDefinition()->getName(),
+    ]);
 
     $elements = [
-      '#theme' => 'ocha_key_figures_figure_list__' . $this->viewMode,
+      '#theme' => 'ocha_key_figures_figure_list__' . $theme_suggestions,
     ];
 
     $fetch_all = FALSE;
@@ -122,7 +131,7 @@ class KeyFigure extends FormatterBase {
       foreach ($figures as $figure) {
         $value = NumberFormatter::format($figure['value'], $langcode, $format, $precision, FALSE);
         $elements['#figures'][] = [
-          '#theme' => 'ocha_key_figures_figure__' . $this->viewMode,
+          '#theme' => 'ocha_key_figures_figure__' . $theme_suggestions,
           '#label' => $figure['name'],
           '#value' => $value,
           '#unit' => $figure['unit'],

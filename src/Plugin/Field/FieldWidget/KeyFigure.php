@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @FieldWidget(
  *   id = "key_figure",
- *   label = @Translation("Key Figure"),
+ *   label = @Translation("Key Figure - Simple"),
  *   field_types = {
  *     "key_figure"
  *   }
@@ -325,7 +325,7 @@ class KeyFigure extends WidgetBase {
           $element['id'] = [
             '#type' => $manual ? 'hidden' : 'select',
             '#multiple' => FALSE,
-            '#title' => $this->t('Id'),
+            '#title' => $this->t('Key Figures'),
             '#options' => $figure_options,
             '#default_value' => $figure_id,
             '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),

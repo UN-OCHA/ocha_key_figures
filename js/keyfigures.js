@@ -18,11 +18,6 @@
         figure.setAttribute('data-id', figure.querySelector('input').value);
       }
 
-      // Update instructions on the sortable figures field.
-      if (figures.querySelector('legend')) {
-        figures.querySelector('legend').innerText += ' (Drag and drop the figures to change their display order).';
-      }
-
       // Initialize drag and drop sorting.
       var el = figures.querySelector('.form-checkboxes');
       var sortable = Sortable.create(el, {
