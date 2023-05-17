@@ -482,8 +482,7 @@ class BaseKeyFiguresController extends ControllerBase {
    * Invalidate cache.
    */
   public function invalidateCache() {
-    $this->cacheBackend->invalidate($this->cacheId . ':countries');
-    $this->cacheBackend->invalidate($this->cacheId . ':years');
+    $this->cacheBackend->invalidate($this->cacheId);
   }
 
   /**

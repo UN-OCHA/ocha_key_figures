@@ -114,9 +114,11 @@ class KeyFigure extends FormatterBase {
       $unit = $item->getFigureUnit();
 
       if ($item->getFigureProvider() != 'manual') {
-        $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider() . '/' . $item->getFigureId());
-        $value = $data['value'];
-        $unit = $data['unit'] ?? '';
+        if (empty($value)) {
+          $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider() . '/' . $item->getFigureId());
+          $value = $data['value'];
+          $unit = $data['unit'] ?? '';
+        }
       }
 
       if (isset($label, $value)) {

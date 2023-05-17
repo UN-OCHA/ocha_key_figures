@@ -67,6 +67,12 @@ class WebhookController extends ControllerBase {
       $is_new = $record['status'] == 'new';
       $paragraph_ids = [];
 
+      // $map = \Drupal::service('entity_field.manager')->getFieldMapByFieldType('key_figure');
+      // Loop entities and load by property
+      // Update field value and save entity
+      // Check if a field is displaying all fields, for new figures
+      // @see testCacheInvalidation
+
       if ($is_new) {
         // All numbers.
         $query = $this->entityTypeManager->getStorage('paragraph')->getQuery();

@@ -290,7 +290,17 @@ class KeyFigureMultiple extends WidgetBase {
             '#title' => $this->t('Id'),
             '#options' => $figure_options,
             '#default_value' => $figure_ids,
+            '#attributes' => [
+              'class' => ['ocha-key-figures__list'],
+            ],
           ];
+
+          $element['sort_order'] = [
+            '#type' => 'textarea',
+            '#title' => $this->t('Sort order'),
+          ];
+
+          $element['sort_order']['#attached']['library'][] = 'ocha_key_figures/admin';
         }
       }
     }

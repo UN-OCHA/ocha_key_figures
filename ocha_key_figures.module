@@ -684,126 +684,6 @@ function ocha_key_figures_add_jsonld_data($metadata, $data) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- */
-function ocha_key_figures_form_layout_paragraphs_component_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  if (!isset($form['field_country']) || !isset($form['field_figures'])) {
-    return;
-  }
-
-  // Add wrapper to figures.
-  $form['field_figures']['#prefix'] = '<div id="field-figures-wrapper">';
-  $form['field_figures']['#suffix'] = '</div>';
-
-  // Add callback for source if needed.
-  if (isset($form['field_source'])) {
-    // Add wrapper to years.
-    $form['field_country']['#prefix'] = '<div id="field-countries-wrapper">';
-    $form['field_country']['#suffix'] = '</div>';
-
-    $form['field_source']['widget']['#ajax'] = [
-      'callback' => 'ocha_key_figures_load_source_countries_callback',
-      'wrapper' => 'field-countries-wrapper',
-      'event' => 'change',
-      'progress' => [
-        'type' => 'throbber',
-        'message' => t('Fetching countries...'),
-      ],
-    ];
-
-    // Force single select for figure.
-    $form['field_figures']['widget']['#multiple'] = FALSE;
-
-    // Add states.
-    $form['field_country']['widget']['#states'] = [
-      'visible' => [
-        ':input[name="field_source"]' => ['!value' => '_none'],
-      ],
-    ];
-
-    $form['field_year']['widget']['#states'] = [
-      'visible' => [
-        ':input[name="field_source"]' => ['!value' => '_none'],
-        'and',
-        ':input[name="field_country"]' => ['!value' => '_none'],
-      ],
-    ];
-
-    $form['field_figures']['widget']['#states'] = [
-      'visible' => [
-        ':input[name="field_source"]' => ['!value' => '_none'],
-        'and',
-        ':input[name="field_country"]' => ['!value' => '_none'],
-        'and',
-        ':input[name="field_year"]' => ['!value' => '_none'],
-      ],
-    ];
-  }
-
-  // Add ajax to countries.
-  $form['field_country']['widget']['#ajax'] = [
-    'callback' => 'ocha_key_figures_load_country_figures_callback',
-    'wrapper' => 'field-figures-wrapper',
-    'event' => 'change',
-    'progress' => [
-      'type' => 'throbber',
-      'message' => t('Fetching figures...'),
-    ],
-  ];
-
-  // Add ajax to years.
-  $form['field_year']['widget']['#ajax'] = [
-    'callback' => 'ocha_key_figures_load_country_figures_callback',
-    'wrapper' => 'field-figures-wrapper',
-    'event' => 'change',
-    'progress' => [
-      'type' => 'throbber',
-      'message' => t('Fetching figures...'),
-    ],
-  ];
-
-  // Get bundle and fields.
-  /** @var Drupal\layout_paragraphs\Form\ComponentFormBase $component_form */
-  $component_form = $form_state->getFormObject();
-  $paragraph = $component_form->getParagraph();
-
-  if (isset($form['field_source'])) {
-    $source = $form_state->getValue('field_source');
-    if (!empty($source)) {
-      $source = $source[0]['value'];
-    }
-    else {
-      $source = $form['field_source']['widget']['#default_value'][0] ?? NULL;
-    }
-  }
-
-  $country = $form_state->getValue('field_country');
-  if (!empty($country)) {
-    $country = $country[0]['value'];
-  }
-  else {
-    $country = $form['field_country']['widget']['#default_value'][0] ?? NULL;
-  }
-
-  $year = $form_state->getValue('field_year');
-  if (!empty($year)) {
-    $year = $year[0]['value'];
-  }
-  else {
-    $year = $form['field_year']['widget']['#default_value'][0] ?? NULL;
-  }
-
-  if ($country) {
-    $form['field_figures']['widget']['#options'] = ocha_key_figures_load_country_figures($paragraph, $country, $year, $source);
-  }
-  else {
-    $form['field_figures']['widget']['#options'] = [];
-  }
-
-  $form['#attached']['library'][] = 'ocha_key_figures/admin';
-}
-
-/**
  * Callback.
  */
 function ocha_key_figures_load_country_figures_callback(array $form, $form_state) {
@@ -896,4 +776,60 @@ function ocha_key_figures_get_max_age() {
   }
 
   return 12 * 60 * 60;
+}
+
+/**
+ * Move to webhook.
+ */
+function testCacheInvalidation() {
+  $map = \Drupal::service('entity_field.manager')->getFieldMapByFieldType('key_figure');
+
+  $records = [
+    'fts_AFG_2023_funding_coverage' => [
+      "label" => "Funding coverage",
+      "value" => "0.23",
+      "unit" => "%",
+      "provider" => "fts",
+      "id" => "fts_AFG_2023_funding_coverage",
+      "country" => "afg",
+      "year" => "2023",
+    ]
+  ];
+
+  $type_ids = [];
+  foreach ($records as $figure_id => $record) {
+    foreach ($map as $type => $info) {
+      $type_ids[$type] = [];
+      foreach ($info as $name => $data) {
+        $query = \Drupal::entityTypeManager()->getStorage($type)->getQuery();
+        $query->condition($name . '.id', $figure_id);
+        $result = $query->execute();
+        $type_ids[$type] = array_merge($type_ids[$type], array_values($result));
+      }
+    }
+  }
+
+  foreach ($type_ids as $type => $ids) {
+    $info = $map[$type];
+    $entities = \Drupal::entityTypeManager()->getStorage($type)->loadMultiple($ids);
+    foreach ($entities as $entity) {
+      // Loop all fields of entity.
+      foreach ($info as $name => $data) {
+        if ($entity->hasField($name)) {
+          $field_data = $entity->get($name)->getValue();
+          foreach ($field_data as &$row) {
+            if (array_key_exists($row['id'], $records)) {
+              $row['value'] = $records[$row['id']]['value'];
+              $row['unit'] = $records[$row['id']]['unit'] ?? '';
+            }
+          }
+          $entity->get($name)->setValue($field_data);
+        }
+      }
+      $entity->save();
+      \Drupal\Core\Cache\Cache::invalidateTags($entity->getCacheTagsToInvalidate());
+    }
+  }
+
+  return;
 }
