@@ -243,6 +243,7 @@ class KeyFigure extends WidgetBase {
 
     // Get list of providers.
     $providers = [];
+
     if ($allow_manual) {
       $providers = [
         'manual' => $this->t('Manual'),

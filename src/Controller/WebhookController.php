@@ -5,11 +5,11 @@ namespace Drupal\ocha_key_figures\Controller;
 use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\group\Entity\Group;
+use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
 use Drupal\ocha_key_figures\Event\KeyFiguresUpdated;
-use Drupal\paragraphs\Entity\Paragraph;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -20,11 +20,11 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 class WebhookController extends ControllerBase {
 
   /**
-   * The logger factory.
+   * The OCHA Key Figures API client.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   * @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController
    */
-  protected $loggerFactory;
+  protected $ochaKeyFiguresApiClient;
 
   /**
    * The entity type manager.
@@ -34,6 +34,13 @@ class WebhookController extends ControllerBase {
   protected $entityTypeManager;
 
   /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager
+   */
+  protected $entityFieldManager;
+
+  /**
    * The event dispatcher.
    *
    * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
@@ -41,12 +48,27 @@ class WebhookController extends ControllerBase {
   protected $eventDispatcher;
 
   /**
+   * The logger factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected $loggerFactory;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(LoggerChannelFactoryInterface $logger_factory, EntityTypeManagerInterface $entity_type_manager, ContainerAwareEventDispatcher $event_dispatcher) {
-    $this->loggerFactory = $logger_factory;
+  public function __construct(
+    BaseKeyFiguresController $ocha_key_figure_api_client,
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityFieldManager $entity_field_manager,
+    ContainerAwareEventDispatcher $event_dispatcher,
+    LoggerChannelFactoryInterface $logger_factory,
+    ) {
+    $this->ochaKeyFiguresApiClient = $ocha_key_figure_api_client;
     $this->entityTypeManager = $entity_type_manager;
+    $this->entityFieldManager = $entity_field_manager;
     $this->eventDispatcher = $event_dispatcher;
+    $this->loggerFactory = $logger_factory;
   }
 
   /**
@@ -63,93 +85,87 @@ class WebhookController extends ControllerBase {
       throw new BadRequestHttpException('Illegal payload');
     }
 
-    foreach ($params['data'] as $record) {
+    $map = $this->entityFieldManager->getFieldMapByFieldType('key_figure');
+
+    $type_ids = [];
+    $event_data = [];
+    $records = $params['data'] ?? [];
+    $keyed_records = [];
+
+    foreach ($records as $record) {
+      $figure_id = $record['data']['id'];
+      $keyed_records[$figure_id] = $record['data'];
       $is_new = $record['status'] == 'new';
-      $paragraph_ids = [];
 
-      // $map = \Drupal::service('entity_field.manager')->getFieldMapByFieldType('key_figure');
-      // Loop entities and load by property
-      // Update field value and save entity
-      // Check if a field is displaying all fields, for new figures
-      // @see testCacheInvalidation
+      foreach ($map as $type => $info) {
+        if (!isset($type_ids[$type])) {
+          $type_ids[$type] = [];
+        }
 
-      if ($is_new) {
-        // All numbers.
-        $query = $this->entityTypeManager->getStorage('paragraph')->getQuery();
-        $query->condition('field_country', $record['data']['iso3'])
-          ->condition('field_year', $record['data']['year'])
-          ->notExists('field_figures');
+        foreach ($info as $name => $data) {
+          // Check field displaying all values.
+          $query = $this->entityTypeManager->getStorage($type)->getQuery();
+          $query->condition($name . '.id', '_all');
+          $query->condition($name . '.provider', $record['data']['provider']);
+          $query->condition($name . '.country', $record['data']['iso3']);
+          $query->condition($name . '.year', [1, 2, $record['data']['year']], 'IN');
+          $result = $query->execute();
 
-        $paragraph_ids = $query->execute();
-      }
-      else {
-        // Individual numbers.
-        $query = $this->entityTypeManager->getStorage('paragraph')->getQuery();
-        $query->condition('field_figures', $record['data']['name'])
-          ->condition('field_country', $record['data']['iso3'])
-          ->condition('field_year', $record['data']['year']);
+          // Check by Id for existing records.
+          if (!$is_new) {
+            $query = $this->entityTypeManager->getStorage($type)->getQuery();
+            $query->condition($name . '.id', $figure_id);
+            $result = array_merge($result, $query->execute());
+          }
 
-        $paragraph_ids = $query->execute();
+          // Add records for event.
+          foreach ($result as $id) {
+            if ($is_new) {
+              $event_data[$type][$id]['new'][$figure_id] = $record['data'];
+            }
+            else {
+              $event_data[$type][$id]['updated'][$figure_id] = $record['data'];
+            }
+          }
 
-        // All numbers.
-        $query = $this->entityTypeManager->getStorage('paragraph')->getQuery();
-        $query->condition('field_country', $record['data']['iso3'])
-          ->condition('field_year', $record['data']['year'])
-          ->notExists('field_figures');
+          // Merge results.
+          $type_ids[$type] = array_merge($type_ids[$type], array_values($result));
 
-        $paragraph_ids_all = $query->execute();
-        $paragraph_ids = array_merge($paragraph_ids, $paragraph_ids_all);
-      }
-
-      if (!empty($ids)) {
-        $bundles = [];
-        $data = [];
-
-        /** @var \Drupal\paragraphs\Entity\Paragraph[] $paragraphs */
-        $paragraphs = $this->entityTypeManager->getStorage('paragraph')->loadMultiple($ids);
-        foreach ($paragraphs as $paragraph) {
           // Invalidate cache.
-          $tags = $paragraph->getCacheTagsToInvalidate();
-          Cache::invalidateTags($tags);
-
-          // Track bundles.
-          $bundles[$paragraph->bundle()] = $paragraph->bundle();
-
-          // Track parents.
-          $parent = $paragraph;
-          while ($parent && $parent instanceof Paragraph) {
-            $parent = $paragraph->getParentEntity();
-          }
-
-          if (!isset($data[$parent->getEntityTypeId()])) {
-            $data[$parent->getEntityTypeId()] = [];
-          }
-
-          if (!isset($data[$parent->getEntityTypeId()][$parent->id()])) {
-            $data[$parent->getEntityTypeId()][$parent->id()] = [
-              'new' => [],
-              'updated' => [],
-            ];
-          }
-
-          if ($is_new) {
-            $data[$parent->getEntityTypeId()][$parent->id()]['new'][$record['data']['id']] = $record;
-          }
-          else {
-            $data[$parent->getEntityTypeId()][$parent->id()]['updated'][$record['data']['id']] = $record;
-          }
+          $this->ochaKeyFiguresApiClient->invalidateCacheTagsByProvider($record['data']['provider']);
         }
-
-        foreach ($bundles as $bundle) {
-          $controller = ocha_key_figures_load_keyfigure_controller($bundle);
-          $controller->invalidateCache();
-        }
-
-        // Get the event_dispatcher service and dispatch the event.
-        $event = new KeyFiguresUpdated($data);
-        $this->eventDispatcher->dispatch($event, KeyFiguresUpdated::EVENT_UPDATED);
       }
     }
+
+    // Update fields and clear cache.
+    foreach ($type_ids as $type => $ids) {
+      $ids = array_unique($ids);
+      $info = $map[$type];
+
+      $entities = $this->entityTypeManager->getStorage($type)->loadMultiple($ids);
+      foreach ($entities as $entity) {
+        // Loop all fields of entity.
+        foreach ($info as $name => $data) {
+          if ($entity->hasField($name)) {
+            $field_data = $entity->get($name)->getValue();
+            foreach ($field_data as &$row) {
+              if (array_key_exists($row['id'], $keyed_records)) {
+                $row['value'] = $keyed_records[$row['id']]['value'];
+                $row['unit'] = $keyed_records[$row['id']]['unit'] ?? '';
+              }
+            }
+            $entity->get($name)->setValue($field_data);
+          }
+        }
+
+        // Always save.
+        $entity->save();
+        Cache::invalidateTags($entity->getCacheTagsToInvalidate());
+      }
+    }
+
+    $event = new KeyFiguresUpdated($event_data);
+    $this->eventDispatcher->dispatch($event, KeyFiguresUpdated::EVENT_UPDATED);
 
     return new JsonResponse('OK');
   }

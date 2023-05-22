@@ -1,7 +1,7 @@
 services:
   ocha_key_figures.webhook_controller:
     class: \Drupal\ocha_key_figures\Controller\WebhookController
-    arguments: ['@logger.factory', '@entity_type.manager', '@event_dispatcher']
+    arguments: ['@ocha_key_figures.key_figures_controller', '@entity_type.manager', '@entity_field.manager', '@event_dispatcher', '@logger.factory']
 
   ocha_key_figures.key_figures_controller:
     class: \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController

@@ -35,7 +35,16 @@ class KeyFigureBase extends FormatterBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static($plugin_id, $plugin_definition, $configuration['field_definition'], $configuration['settings'], $configuration['label'], $configuration['view_mode'], $configuration['third_party_settings'], $container->get('ocha_key_figures.key_figures_controller'));
+    return new static(
+      $plugin_id,
+      $plugin_definition,
+      $configuration['field_definition'],
+      $configuration['settings'],
+      $configuration['label'],
+      $configuration['view_mode'],
+      $configuration['third_party_settings'],
+      $container->get('ocha_key_figures.key_figures_controller')
+    );
   }
 
   /**
@@ -146,7 +155,9 @@ class KeyFigureBase extends FormatterBase {
       'year' => $year,
       'archived' => FALSE,
     ]);
+
     $figures = [];
+
     if (!empty($data)) {
       foreach ($data as $item) {
         $figures[$item['id']] = $item;

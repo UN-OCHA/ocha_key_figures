@@ -3,6 +3,7 @@
 namespace Drupal\ocha_key_figures\Controller;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Controller\ControllerBase;
 use GuzzleHttp\ClientInterface;
@@ -33,7 +34,7 @@ class BaseKeyFiguresController extends ControllerBase {
    *
    * @var string
    */
-  protected $cacheId = '';
+  protected $cacheId = 'keyfigures';
 
   /**
    * API URL.
@@ -84,13 +85,6 @@ class BaseKeyFiguresController extends ControllerBase {
    *   Raw results.
    */
   public function getKeyFigures(string $provider, string $iso3, $year = '', $show_all = FALSE) : array {
-    $cid = $this->cacheId . ':' . $provider . ':' . $iso3 . ':' . $year;
-
-    // Return cached data.
-    if ($cache = $this->cacheBackend->get($cid)) {
-      return $cache->data;
-    }
-
     $query = [
       'iso3' => $iso3,
       'year' => $year,
@@ -111,7 +105,8 @@ class BaseKeyFiguresController extends ControllerBase {
       $query['year'] = date('Y');
     }
 
-    $data = $this->getData($provider, $query);
+    $prefix = $this->getPrefix($provider);
+    $data = $this->getData($prefix, $query);
 
     foreach ($data as $key => $row) {
       $data[$key]['date'] = new \DateTime($row['year'] . '-01-01');
@@ -143,9 +138,6 @@ class BaseKeyFiguresController extends ControllerBase {
       }
     }
 
-    // Cache data.
-    $this->cacheBackend->set($cid, $results, time() + $this->cacheDuration);
-
     return $results;
   }
 
@@ -163,22 +155,9 @@ class BaseKeyFiguresController extends ControllerBase {
    *   Raw results.
    */
   public function query(string $provider, string $path, array $query = [], bool $use_cache = TRUE) : array {
-    $cid = $this->cacheId . ':' . $provider . md5($path) . ':' . md5(json_encode($query));
-
-    // Return cached data.
-    if ($use_cache && $cache = $this->cacheBackend->get($cid)) {
-      return $cache->data;
-    }
-
     // Fetch data.
-    $data = $this->getData($provider . '/' . $path, $query);
-
-    // Cache data.
-    if ($use_cache) {
-      $this->cacheBackend->set($cid, $data, time() + $this->cacheDuration);
-    }
-
-    return $data;
+    $prefix = $this->getPrefix($provider);
+    return $this->getData($prefix . '/' . $path, $query, $use_cache);
   }
 
   /**
@@ -188,16 +167,35 @@ class BaseKeyFiguresController extends ControllerBase {
    *   API path.
    * @param array $query
    *   Query options.
+   * @param bool $use_cache
+   *   Use caching.
    *
    * @return array<string, mixed>
    *   Raw results.
    */
-  protected function getData(string $path, array $query = []) : array {
+  protected function getData(string $path, array $query = [], bool $use_cache = TRUE) : array {
     $endpoint = $this->apiUrl;
     $api_key = $this->apiKey;
 
     if (empty($endpoint)) {
       return [];
+    }
+
+    $cid = $this->buildCacheId($path, $query);
+
+    // Return cached data.
+    if ($use_cache && $cache = $this->cacheBackend->get($cid)) {
+      return $cache->data;
+    }
+
+    // Cache tags.
+    $cache_tags = [
+      $this->cacheId,
+    ];
+
+    $path_parts = explode('/', $path);
+    for ($i = 0; $i < count($path_parts); $i++) {
+      $cache_tags[] = $this->cacheId . '_' . implode('_', array_slice($path_parts, 0, $i + 1));
     }
 
     $headers = [
@@ -240,6 +238,11 @@ class BaseKeyFiguresController extends ControllerBase {
 
     $body = $response->getBody() . '';
     $results = json_decode($body, TRUE);
+
+    // Cache data.
+    if ($use_cache) {
+      $this->cacheBackend->set($cid, $results, time() + $this->cacheDuration, $cache_tags);
+    }
 
     return $results;
   }
@@ -442,24 +445,15 @@ class BaseKeyFiguresController extends ControllerBase {
    * Get countries.
    */
   public function getCountries(string $provider) {
-    $cid = $this->cacheId . ':' . $provider . ':countries';
-
-    // Return cached data.
-    if ($cache = $this->cacheBackend->get($cid)) {
-      return $cache->data;
-    }
-
     // Fetch data.
     $countries = [];
-    $data = $this->getData('countries');
+    $prefix = $this->getPrefix($provider);
+    $data = $this->getData($prefix . '/countries');
     foreach ($data as $row) {
       $countries[$row['value']] = $row['label'];
     }
 
     asort($countries);
-
-    // Cache data.
-    $this->cacheBackend->set($cid, $countries, time() + $this->cacheDuration);
 
     return $countries;
   }
@@ -468,22 +462,13 @@ class BaseKeyFiguresController extends ControllerBase {
    * Get countries.
    */
   public function getYears(string $provider) {
-    $cid = $this->cacheId . ':' . $provider . ':years';
-
-    // Return cached data.
-    if ($cache = $this->cacheBackend->get($cid)) {
-      return $cache->data;
-    }
-
     // Fetch data.
     $years = [];
-    $data = $this->getData('years');
+    $prefix = $this->getPrefix($provider);
+    $data = $this->getData($prefix . '/years');
     foreach ($data as $row) {
       $years[$row['value']] = $row['label'];
     }
-
-    // Cache data.
-    $this->cacheBackend->set($cid, $years, time() + $this->cacheDuration);
 
     return $years;
   }
@@ -491,8 +476,15 @@ class BaseKeyFiguresController extends ControllerBase {
   /**
    * Invalidate cache.
    */
-  public function invalidateCache() {
-    $this->cacheBackend->invalidate($this->cacheId);
+  public function invalidateCache($path = '', $query = []) {
+    $cid = $this->buildCacheId($path, $query);
+    $this->cacheBackend->invalidate($cid);
+  }
+
+  public function invalidateCacheTagsByProvider($provider) {
+    Cache::invalidateTags([
+      $this->cacheId . '_' . $this->getPrefix($provider),
+    ]);
   }
 
   /**
@@ -503,14 +495,53 @@ class BaseKeyFiguresController extends ControllerBase {
    */
   public function getSupportedProviders() {
     $options = [];
-    $can_read = $this->query('me', 'providers');
 
+    $can_read = $this->getData('me/providers');
     foreach ($can_read as $provider) {
-      $options[$provider['prefix']] = $provider['name'];
+      $options[$provider['id']] = $provider['name'];
     }
 
     asort($options);
     return $options;
+  }
+
+  /**
+   * Get prefix for a provider.
+   */
+  public function getPrefix($provider_id) {
+    if ($provider_id == 'me') {
+      return 'me';
+    }
+
+    $can_read = $this->getData('me/providers');
+    foreach ($can_read as $provider) {
+      if ($provider['id'] == $provider_id) {
+        return $provider['prefix'];
+      }
+    }
+
+    return $provider_id;
+  }
+
+  /**
+   * Build cache Id.
+   */
+  protected function buildCacheId($path = '', $query = []) {
+    $cache_id = $this->cacheId;
+
+    if (empty($path) || $path == '') {
+      return $cache_id;
+    }
+
+    $cache_id .= ':' . str_replace('/', ':', $path);
+
+    if (empty($query)) {
+      return $cache_id;
+    }
+
+    $cache_id .= ':' . md5(json_encode($query));
+
+    return $cache_id;
   }
 
 }

@@ -2,12 +2,8 @@
 
 namespace Drupal\ocha_key_figures\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
 use Drupal\ocha_key_figures\Helpers\NumberFormatter;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'key_figure' formatter.
