@@ -33,6 +33,9 @@ class KeyFigureCondensed extends KeyFigureBase {
 
     $elements = [
       '#theme' => 'ocha_key_figures_figure_list__' . $theme_suggestions,
+      '#cache' => [
+        'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
+      ],
     ];
 
     $fetch_all = FALSE;

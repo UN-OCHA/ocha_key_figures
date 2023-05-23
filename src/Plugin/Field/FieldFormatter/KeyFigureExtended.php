@@ -40,7 +40,7 @@ class KeyFigureExtended extends KeyFigureBase {
       '#view_all_info' => $view_all_info,
       '#weight' => 99,
       '#cache' => [
-        'max-age' => ocha_key_figures_get_max_age(),
+        'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
       ],
     ];
 

@@ -51,6 +51,13 @@ class BaseKeyFiguresController extends ControllerBase {
   protected $apiKey = '';
 
   /**
+   * App name.
+   *
+   * @var string
+   */
+  protected $appName = '';
+
+  /**
    * Cache live.
    *
    * @var int
@@ -66,9 +73,18 @@ class BaseKeyFiguresController extends ControllerBase {
 
     $this->apiUrl = $this->config('ocha_key_figures.settings')->get('ocha_api_url');
     $this->apiKey = $this->config('ocha_key_figures.settings')->get('ocha_api_key');
+    $this->appName = $this->config('ocha_key_figures.settings')->get('ocha_app_name');
+    $this->cacheDuration = $this->config('ocha_key_figures.settings')->get('max_age');
 
     // Make sure it ends with a slash.
     $this->apiUrl = rtrim($this->apiUrl, '/') . '/';
+  }
+
+  /**
+   * Get max age.
+   */
+  public function getMaxAge() {
+    return $this->cacheDuration;
   }
 
   /**
@@ -176,6 +192,7 @@ class BaseKeyFiguresController extends ControllerBase {
   protected function getData(string $path, array $query = [], bool $use_cache = TRUE) : array {
     $endpoint = $this->apiUrl;
     $api_key = $this->apiKey;
+    $app_name = $this->appName;
 
     if (empty($endpoint)) {
       return [];
@@ -201,7 +218,7 @@ class BaseKeyFiguresController extends ControllerBase {
     $headers = [
       'API-KEY' => $api_key,
       'ACCEPT' => 'application/json',
-      'APP-NAME' => 'RW Numbers',
+      'APP-NAME' => $app_name,
     ];
 
     // Construct full URL without ending /.
