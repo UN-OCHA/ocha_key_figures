@@ -12,7 +12,7 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
+use Drupal\ocha_key_figures\Controller\OchaKeyFiguresController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -52,7 +52,7 @@ class KeyFigureMultiple extends WidgetBase {
   /**
    * The OCHA Key Figures API client.
    *
-   * @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController
+   * @var \Drupal\ocha_key_figures\Controller\OchaKeyFiguresController
    */
   protected $ochaKeyFiguresApiClient;
 
@@ -74,7 +74,7 @@ class KeyFigureMultiple extends WidgetBase {
     array $third_party_settings,
     LoggerChannelFactoryInterface $logger_factory,
     RendererInterface $renderer,
-    BaseKeyFiguresController $ocha_key_figure_api_client
+    OchaKeyFiguresController $ocha_key_figure_api_client
   ) {
     parent::__construct(
       $plugin_id,

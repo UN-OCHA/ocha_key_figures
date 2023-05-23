@@ -6,7 +6,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
+use Drupal\ocha_key_figures\Controller\OchaKeyFiguresController;
 use Drupal\ocha_key_figures\Helpers\NumberFormatter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,14 +18,14 @@ class KeyFigureBase extends FormatterBase {
   /**
    * The OCHA Key Figures API client.
    *
-   * @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController
+   * @var \Drupal\ocha_key_figures\Controller\OchaKeyFiguresController
    */
   protected $ochaKeyFiguresApiClient;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, BaseKeyFiguresController $ocha_key_figure_api_client) {
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, OchaKeyFiguresController $ocha_key_figure_api_client) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
 
     $this->ochaKeyFiguresApiClient = $ocha_key_figure_api_client;

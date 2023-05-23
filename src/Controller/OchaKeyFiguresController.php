@@ -6,6 +6,7 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -13,7 +14,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 /**
  * Base controller for Key Figures.
  */
-class BaseKeyFiguresController extends ControllerBase {
+class OchaKeyFiguresController extends ControllerBase {
 
   /**
    * The HTTP client to fetch the files with.
@@ -107,7 +108,7 @@ class BaseKeyFiguresController extends ControllerBase {
     ];
 
     if (!$show_all) {
-      $query['archived'] = FALSE;
+      $query['archived'] = 0;
     }
 
     // Special case for year.
@@ -212,7 +213,7 @@ class BaseKeyFiguresController extends ControllerBase {
 
     $path_parts = explode('/', $path);
     for ($i = 0; $i < count($path_parts); $i++) {
-      $cache_tags[] = $this->cacheId . '_' . implode('_', array_slice($path_parts, 0, $i + 1));
+      $cache_tags[] = $this->cacheId . ':' . implode(':', array_slice($path_parts, 0, $i + 1));
     }
 
     $headers = [
@@ -498,10 +499,44 @@ class BaseKeyFiguresController extends ControllerBase {
     $this->cacheBackend->invalidate($cid);
   }
 
+  /**
+   * Invalidate cache.
+   */
   public function invalidateCacheTagsByProvider($provider) {
     Cache::invalidateTags([
-      $this->cacheId . '_' . $this->getPrefix($provider),
+      $this->cacheId . ':' . $this->getPrefix($provider),
     ]);
+  }
+
+  /**
+   * Invalidate cache.
+   */
+  public function invalidateCacheTagsByFigure(array $figure) {
+    Cache::invalidateTags([
+      $this->cacheId . ':' . $this->getPrefix($figure['provider']) . ':' . $figure['id'],
+    ]);
+  }
+
+  /**
+   * Get cache tags
+   */
+  public function getCacheTags(array $figure) {
+    return [
+      $this->cacheId,
+      $this->cacheId . ':' . $this->getPrefix($figure['provider']),
+      $this->cacheId . ':' . $this->getPrefix($figure['provider']) . ':' . $figure['id'],
+    ];
+  }
+
+  /**
+   * Get cache tags
+   */
+  public function getCacheTagsForFigure(KeyFigure $figure) {
+    return [
+      $this->cacheId,
+      $this->cacheId . ':' . $this->getPrefix($figure->getFigureProvider()),
+      $this->cacheId . ':' . $this->getPrefix($figure->getFigureProvider()) . ':' . $figure->getFigureId(),
+    ];
   }
 
   /**

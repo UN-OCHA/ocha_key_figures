@@ -111,6 +111,10 @@ class KeyFigureExtended extends KeyFigureBase {
       $elements['#figures'][] = [
         '#theme' => 'ocha_key_figures_extended_figure__' . $theme_suggestions,
         '#figure' => $figure,
+        '#cache' => [
+          'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
+          'tags' => $this->ochaKeyFiguresApiClient->getCacheTags($figure),
+        ],
       ];
     }
 

@@ -8,7 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\ocha_key_figures\Controller\BaseKeyFiguresController;
+use Drupal\ocha_key_figures\Controller\OchaKeyFiguresController;
 use Drupal\ocha_key_figures\Event\KeyFiguresUpdated;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +22,7 @@ class WebhookController extends ControllerBase {
   /**
    * The OCHA Key Figures API client.
    *
-   * @var \Drupal\ocha_key_figures\Controller\BaseKeyFiguresController
+   * @var \Drupal\ocha_key_figures\Controller\OchaKeyFiguresController
    */
   protected $ochaKeyFiguresApiClient;
 
@@ -58,7 +58,7 @@ class WebhookController extends ControllerBase {
    * {@inheritdoc}
    */
   public function __construct(
-    BaseKeyFiguresController $ocha_key_figure_api_client,
+    OchaKeyFiguresController $ocha_key_figure_api_client,
     EntityTypeManagerInterface $entity_type_manager,
     EntityFieldManager $entity_field_manager,
     ContainerAwareEventDispatcher $event_dispatcher,
@@ -122,17 +122,20 @@ class WebhookController extends ControllerBase {
           foreach ($result as $id) {
             if ($is_new) {
               $event_data[$type][$id]['new'][$figure_id] = $record['data'];
+
+              // Invalidate cache for provider.
+              $this->ochaKeyFiguresApiClient->invalidateCacheTagsByProvider($record['data']['provider']);
             }
             else {
               $event_data[$type][$id]['updated'][$figure_id] = $record['data'];
+
+              // Invalidate cache for figure.
+              $this->ochaKeyFiguresApiClient->invalidateCacheTagsByFigure($record['data']);
             }
           }
 
           // Merge results.
           $type_ids[$type] = array_merge($type_ids[$type], array_values($result));
-
-          // Invalidate cache.
-          $this->ochaKeyFiguresApiClient->invalidateCacheTagsByProvider($record['data']['provider']);
         }
       }
     }
