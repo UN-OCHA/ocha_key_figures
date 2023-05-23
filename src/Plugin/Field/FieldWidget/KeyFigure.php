@@ -264,7 +264,7 @@ class KeyFigure extends WidgetBase {
     ];
 
     // Extra fields to select the data from a provider.
-    if (isset($provider) && !$manual) {
+    if (isset($provider) && !empty($provider) && !$manual) {
       $label = NULL;
       $value = NULL;
       $unit = NULL;
