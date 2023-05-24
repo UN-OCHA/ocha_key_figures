@@ -101,7 +101,7 @@ class OchaKeyFiguresController extends ControllerBase {
    * @return array<string, mixed>
    *   Raw results.
    */
-  public function getKeyFigures(string $provider, string $iso3, $year = '', $show_all = FALSE) : array {
+  protected function fetchKeyFigures(string $provider, string $iso3, $year = '', $show_all = FALSE) : array {
     $query = [
       'iso3' => $iso3,
       'year' => $year,
@@ -112,11 +112,9 @@ class OchaKeyFiguresController extends ControllerBase {
     }
 
     // Special case for year.
-    $grouped = FALSE;
     if (empty($year) || $year == 1) {
       // No need to filter.
       unset($query['year']);
-      $grouped = TRUE;
     }
     elseif ($year == 2) {
       $query['year'] = date('Y');
@@ -137,36 +135,69 @@ class OchaKeyFiguresController extends ControllerBase {
       return (int) ($b['date'] > $a['date']);
     });
 
+    return $data;
+  }
+
+  /**
+   * Fetch Key Figures.
+   *
+   * @param string $iso3
+   *   ISO3 of the country we want Key Figures for.
+   * @param string $year
+   *   Optional year.
+   * @param string $show_all
+   *   Show also archived figures.
+   *
+   * @return array<string, mixed>
+   *   Raw results.
+   */
+  public function getKeyFigures(string $provider, string $iso3, $year = '', $show_all = FALSE) : array {
+    $data = $this->fetchKeyFigures($provider, $iso3, $year, $show_all);
+
     $results = [];
-    if (!$grouped) {
-      foreach ($data as $row) {
-        $results[$row['name']] = $row;
-      }
+    foreach ($data as $row) {
+      $results[$row['name']] = $row;
     }
-    else {
-      foreach ($data as $row) {
-        if (!isset($results[$row['name']])) {
-          $results[$row['name']] = $row;
-          $results[$row['name']]['values'] = [];
-        }
 
-        $results[$row['name']]['values'][] = [
-          'date' => $row['date'],
-          'value' => $row['value'],
-        ];
+    return $results;
+  }
 
-        // Merge historic values if present.
-        if (isset($row['historic_values']) && is_array($row['historic_values'])) {
-          foreach ($row['historic_values'] as $fig) {
-            if ($row['name'] == 'Civilians Injured since 24 Feb 2022') {
-              dpm($fig['value'],substr($fig['date'], 0, 10));
+  /**
+   * Fetch Key Figures.
+   *
+   * @param string $iso3
+   *   ISO3 of the country we want Key Figures for.
+   * @param string $year
+   *   Optional year.
+   * @param string $show_all
+   *   Show also archived figures.
+   *
+   * @return array<string, mixed>
+   *   Raw results.
+   */
+  public function getKeyFiguresGrouped(string $provider, string $iso3, $year = '', $show_all = FALSE) : array {
+    $data = $this->fetchKeyFigures($provider, $iso3, $year, $show_all);
 
-            }
-            $results[$row['name']]['values'][] = [
-              'date' => new \DateTime(substr($fig['date'], 0, 10)),
-              'value' => $fig['value'],
-            ];
-          }
+    $results = [];
+
+    foreach ($data as $row) {
+      if (!isset($results[$row['name']])) {
+        $results[$row['name']] = $row;
+        $results[$row['name']]['values'] = [];
+      }
+
+      $results[$row['name']]['values'][] = [
+        'date' => $row['date'],
+        'value' => $row['value'],
+      ];
+
+      // Merge historic values if present.
+      if (isset($row['historic_values']) && is_array($row['historic_values'])) {
+        foreach ($row['historic_values'] as $fig) {
+          $results[$row['name']]['values'][] = [
+            'date' => new \DateTime(substr($fig['date'], 0, 10)),
+            'value' => $fig['value'],
+          ];
         }
       }
     }

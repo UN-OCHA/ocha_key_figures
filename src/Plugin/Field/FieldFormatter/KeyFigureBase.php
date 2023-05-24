@@ -54,8 +54,6 @@ class KeyFigureBase extends FormatterBase {
     return [
       'format' => 'decimal',
       'precision' => 1,
-      'display_sparklines' => 'no',
-      'output_json_ld' => 'no',
       'percentage' => 'yes',
     ] + parent::defaultSettings();
   }
@@ -91,26 +89,6 @@ class KeyFigureBase extends FormatterBase {
       '#default_value' => $this->getSetting('percentage') ?? 'yes',
     ];
 
-    $elements['display_sparklines'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Display sparklines'),
-      '#options' => [
-        'no' => $this->t('No'),
-        'yes' => $this->t('Yes'),
-      ],
-      '#default_value' => $this->getSetting('display_sparklines') ?? 'no',
-    ];
-
-    $elements['output_json_ld'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Output Json Ld'),
-      '#options' => [
-        'no' => $this->t('No'),
-        'yes' => $this->t('Yes'),
-      ],
-      '#default_value' => $this->getSetting('output_json_ld') ?? 'no',
-    ];
-
     return $elements;
   }
 
@@ -120,17 +98,6 @@ class KeyFigureBase extends FormatterBase {
   public function settingsSummary() {
     $summary = [];
 
-    $format = $this->getSetting('format') ?? 'decimal';
-    $formats = NumberFormatter::getSupportedFormats();
-    $summary[] = $this->t('Format: @value', [
-      '@value' => $formats[$format] ?? ucfirst($format),
-    ]);
-    $summary[] = $this->t('Precision: @value', [
-      '@value' => $this->getSetting('precision') ?? 1,
-    ]);
-    $summary[] = $this->t('Output style percentages: @value', [
-      '@value' => $this->getSetting('percentage') ?? 'yes',
-    ]);
     $summary[] = $this->t('Display sparklines: @value', [
       '@value' => $this->getSetting('display_sparklines') ?? 'no',
     ]);

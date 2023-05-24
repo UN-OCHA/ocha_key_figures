@@ -2,7 +2,10 @@
 
 namespace Drupal\ocha_key_figures\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\ocha_key_figures\Controller\OchaKeyFiguresController;
 use Drupal\ocha_key_figures\Helpers\NumberFormatter;
 
 /**
@@ -17,6 +20,76 @@ use Drupal\ocha_key_figures\Helpers\NumberFormatter;
  * )
  */
 class KeyFigureExtended extends KeyFigureBase {
+
+  /**
+   * Options for sparklines.
+   */
+  protected $sparklineOptions = [];
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, OchaKeyFiguresController $ocha_key_figure_api_client) {
+    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings, $ocha_key_figure_api_client);
+
+    $this->sparklineOptions = [
+      'no' => $this->t('No'),
+      'all' => $this->t('For all years'),
+      'single' => $this->t('For single year'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function defaultSettings() {
+    return [
+      'display_sparklines' => 'no',
+      'output_json_ld' => 'no',
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $elements = parent::settingsForm($form, $form_state);
+
+    $elements['display_sparklines'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Display sparklines'),
+      '#options' => $this->sparklineOptions,
+      '#default_value' => $this->getSetting('display_sparklines') ?? 'no',
+    ];
+
+    $elements['output_json_ld'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Output Json Ld'),
+      '#options' => [
+        'no' => $this->t('No'),
+        'yes' => $this->t('Yes'),
+      ],
+      '#default_value' => $this->getSetting('output_json_ld') ?? 'no',
+    ];
+
+    return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = parent::settingsSummary();
+
+    $summary[] = $this->t('Display sparklines: @value', [
+      '@value' => $this->sparklineOptions[$this->getSetting('display_sparklines') ?? 'no'],
+    ]);
+    $summary[] = $this->t('Output Json Ld: @value', [
+      '@value' => $this->getSetting('output_json_ld') ?? 'no',
+    ]);
+
+    return $summary;
+  }
 
   /**
    * {@inheritdoc}
@@ -48,7 +121,7 @@ class KeyFigureExtended extends KeyFigureBase {
 
     $fetch_all = FALSE;
     $figure_names = [];
-    foreach ($items as $delta => $item) {
+    foreach ($items as $item) {
       if ($item->getFigureId() == '_all') {
         $fetch_all = TRUE;
       }
@@ -61,13 +134,21 @@ class KeyFigureExtended extends KeyFigureBase {
     $first = $items->first();
     $year = $first->getFigureYear();
     $sparklines = FALSE;
-    if ($this->getSetting('display_sparklines') == 'yes') {
+    if ($this->getSetting('display_sparklines') == 'all') {
       $sparklines = TRUE;
       $year = '';
     }
+    elseif ($this->getSetting('display_sparklines') == 'single') {
+      $sparklines = TRUE;
+    }
 
     // Get the data.
-    $results = $this->ochaKeyFiguresApiClient->getKeyFigures($first->getFigureProvider(), $first->getFigureCountry(), $year);
+    if ($sparklines) {
+      $results = $this->ochaKeyFiguresApiClient->getKeyFiguresGrouped($first->getFigureProvider(), $first->getFigureCountry(), $year);
+    }
+    else {
+      $results = $this->ochaKeyFiguresApiClient->getKeyFigures($first->getFigureProvider(), $first->getFigureCountry(), $year);
+    }
 
     // If not _all, filter items.
     $filtered_results = $results;
