@@ -24,6 +24,8 @@ class KeyFigureCondensed extends KeyFigureBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $format = $this->getSetting('format');
     $precision = $this->getSetting('precision');
+    $percentage_formatted = $this->getSetting('percentage');
+
     $theme_suggestions = implode('__', [
       $this->viewMode,
       $items->getEntity()->getEntityTypeId(),
@@ -56,6 +58,9 @@ class KeyFigureCondensed extends KeyFigureBase {
         }
         if (isset($figure['valueType']) && $figure['valueType'] == 'percentage') {
           $figure['unit'] = $figure['unit'] ?? '%';
+          if ($percentage_formatted == 'yes') {
+            $figure['value'] *= 100;
+          }
         }
 
         $value = NumberFormatter::format($figure['value'], $langcode, $format, $precision, FALSE);
@@ -81,10 +86,14 @@ class KeyFigureCondensed extends KeyFigureBase {
         $unit = $item->getFigureUnit();
 
         if ($item->getFigureProvider() != 'manual') {
-          if (empty($value)) {
-            $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider(), $item->getFigureId());
-            $value = $data['value'];
-            $unit = $data['unit'] ?? '';
+          $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider(), $item->getFigureId());
+          $value = $data['value'];
+          $unit = $data['unit'] ?? '';
+
+          if ($data['valueType'] == 'percentage') {
+            if ($percentage_formatted == 'yes') {
+              $value *= 100;
+            }
           }
         }
 

@@ -24,6 +24,8 @@ class KeyFigureExtended extends KeyFigureBase {
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $format = $this->getSetting('format');
     $precision = $this->getSetting('precision');
+    $percentage_formatted = $this->getSetting('percentage');
+
     $theme_suggestions = implode('__', [
       $this->viewMode,
       $items->getEntity()->getEntityTypeId(),
@@ -97,6 +99,9 @@ class KeyFigureExtended extends KeyFigureBase {
     foreach ($data as &$fig) {
       if (isset($fig['valueType']) && $fig['valueType'] == 'percentage') {
         $fig['suffix'] = $fig['unit'] ?? '%';
+        if ($percentage_formatted == 'yes') {
+          $fig['value'] *= 100;
+        }
       }
     }
 

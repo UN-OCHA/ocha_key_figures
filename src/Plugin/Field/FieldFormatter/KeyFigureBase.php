@@ -56,6 +56,7 @@ class KeyFigureBase extends FormatterBase {
       'precision' => 1,
       'display_sparklines' => 'no',
       'output_json_ld' => 'no',
+      'percentage' => 'yes',
     ] + parent::defaultSettings();
   }
 
@@ -78,6 +79,16 @@ class KeyFigureBase extends FormatterBase {
       '#default_value' => $this->getSetting('precision') ?? 1,
       '#description' => $this->t('Number of decimal digits in compact form: 1.2 million with a precision of
         1, 1.23 million with a precision of 2. Defaults to 1.'),
+    ];
+
+    $elements['percentage'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Format percentages'),
+      '#options' => [
+        'yes' => $this->t('Yes'),
+        'no' => $this->t('No, output raw value'),
+      ],
+      '#default_value' => $this->getSetting('percentage') ?? 'yes',
     ];
 
     $elements['display_sparklines'] = [
@@ -116,6 +127,9 @@ class KeyFigureBase extends FormatterBase {
     ]);
     $summary[] = $this->t('Precision: @value', [
       '@value' => $this->getSetting('precision') ?? 1,
+    ]);
+    $summary[] = $this->t('Output style percentages: @value', [
+      '@value' => $this->getSetting('percentage') ?? 'yes',
     ]);
     $summary[] = $this->t('Display sparklines: @value', [
       '@value' => $this->getSetting('display_sparklines') ?? 'no',
