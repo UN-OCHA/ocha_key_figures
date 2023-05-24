@@ -100,7 +100,7 @@ class KeyFigureExtended extends KeyFigureBase {
       if (isset($fig['valueType']) && $fig['valueType'] == 'percentage') {
         $fig['suffix'] = $fig['unit'] ?? '%';
         if ($percentage_formatted == 'yes') {
-          $fig['value'] *= 100;
+          $fig['value'] /= 100;
         }
       }
     }

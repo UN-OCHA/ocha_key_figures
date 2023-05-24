@@ -58,8 +58,8 @@ class KeyFigureCondensed extends KeyFigureBase {
         }
         if (isset($figure['valueType']) && $figure['valueType'] == 'percentage') {
           $figure['unit'] = $figure['unit'] ?? '%';
-          if ($percentage_formatted == 'yes') {
-            $figure['value'] *= 100;
+          if ($percentage_formatted == 'no') {
+            $figure['value'] /= 100;
           }
         }
 
@@ -91,8 +91,8 @@ class KeyFigureCondensed extends KeyFigureBase {
           $unit = $data['unit'] ?? '';
 
           if ($data['valueType'] == 'percentage') {
-            if ($percentage_formatted == 'yes') {
-              $value *= 100;
+            if ($percentage_formatted == 'no') {
+              $value /= 100;
             }
           }
         }
