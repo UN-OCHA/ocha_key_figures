@@ -147,10 +147,26 @@ class OchaKeyFiguresController extends ControllerBase {
       foreach ($data as $row) {
         if (!isset($results[$row['name']])) {
           $results[$row['name']] = $row;
-          $results[$row['name']]['values'] = [$row];
+          $results[$row['name']]['values'] = [];
         }
-        else {
-          $results[$row['name']]['values'][] = $row;
+
+        $results[$row['name']]['values'][] = [
+          'date' => $row['date'],
+          'value' => $row['value'],
+        ];
+
+        // Merge historic values if present.
+        if (isset($row['historic_values']) && is_array($row['historic_values'])) {
+          foreach ($row['historic_values'] as $fig) {
+            if ($row['name'] == 'Civilians Injured since 24 Feb 2022') {
+              dpm($fig['value'],substr($fig['date'], 0, 10));
+
+            }
+            $results[$row['name']]['values'][] = [
+              'date' => new \DateTime(substr($fig['date'], 0, 10)),
+              'value' => $fig['value'],
+            ];
+          }
         }
       }
     }
