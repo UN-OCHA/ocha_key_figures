@@ -8,39 +8,19 @@
   Drupal.behaviors.ochaKeyFigures = {
     attach: function (context) {
       let separator = '|-|';
-      let figures = context.querySelector('[data-drupal-selector="edit-field-figures"]');
+      let figures = context.querySelector('[data-drupal-selector="edit-field-multifigures-id"]');
+
       if (!figures) {
         return;
       }
 
-      let activeFigures = context.querySelector('[data-drupal-selector="edit-field-active-sparklines"]');
-      if (!activeFigures) {
-        return;
-      }
-
-      for (var figure of figures.querySelectorAll('.form-checkbox')) {
-        let activeFigure = activeFigures.querySelector('.form-checkbox[value="' + figure.value + '"]');
-        let activeLabel = activeFigures.querySelector('[for="' + activeFigure.id + '"]');
-
-        activeLabel.innerText = 'Show sparkline?';
-        figure.closest('.form-checkboxes--child').nextElementSibling.appendChild(activeFigure);
-        figure.closest('.form-checkboxes--child').nextElementSibling.appendChild(activeLabel);
-
+      for (var figure of figures.querySelectorAll('.form-type--checkbox')) {
         // Add dataId for sorting.
-        activeFigure.closest('.form-checkboxes--checkbox').setAttribute('data-id', activeFigure.value);
-      }
-
-      // Drop the non-JS sparkline field from DOM.
-      activeFigures.closest('.field--name-field-active-sparklines').remove();
-      context.querySelector('[data-drupal-selector="edit-field-sorted-sparklines-wrapper"]').style.display = 'none';
-
-      // Update instructions on the sortable figures field.
-      if (figures.querySelector('.description')) {
-        figures.querySelector('.description').innerText += ' Drag and drop the figures to change their display order.';
+        figure.setAttribute('data-id', figure.querySelector('input').value);
       }
 
       // Initialize drag and drop sorting.
-      var el = document.querySelector('#field-figures-wrapper .form-checkboxes');
+      var el = figures.querySelector('.form-checkboxes');
       var sortable = Sortable.create(el, {
         store: {
           /**
@@ -49,7 +29,7 @@
            * @returns {Array}
            */
           get: function (sortable) {
-            var storage = context.querySelector('[data-drupal-selector="edit-field-sorted-sparklines-0-value"]');
+            var storage = context.querySelector('[data-drupal-selector="edit-field-multifigures-sort-order"]');
             var order = storage.value;
             return order ? order.split(separator) : [];
           },
@@ -60,7 +40,7 @@
            */
           set: function (sortable) {
             var order = sortable.toArray();
-            var storage = context.querySelector('[data-drupal-selector="edit-field-sorted-sparklines-0-value"]');
+            var storage = context.querySelector('[data-drupal-selector="edit-field-multifigures-sort-order"]');
             storage.value = order.join(separator);
           }
         }

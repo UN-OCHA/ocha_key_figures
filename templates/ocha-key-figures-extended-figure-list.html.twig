@@ -1,0 +1,20 @@
+<div class="ocha-key-figures">
+  <ul class="ocha-key-figures__list">
+    {{ figures }}
+  </ul>
+
+  {% if view_all %}
+  <footer class="view-more ocha-key-figures__links">
+    <a href="{{ view_all_info.href }}">{{ view_all_info.title }}</a>
+  </footer>
+  {% endif %}
+
+  {% if jsonld is not empty %}
+  <script type="application/ld+json">
+    {{ jsonld|raw }}
+  </script>
+  {% endif %}
+
+</div>{# .ocha-key-figures #}
+
+{% set catch_cache = figures|render %}

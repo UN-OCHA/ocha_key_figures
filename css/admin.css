@@ -3,7 +3,7 @@
  */
 
 /* Key Figures */
-.ocha-key-figures__list {
+.ocha-key-figures__list .form-checkboxes {
   --rwkf-num-cols: 1;
   --rwkf-gap-size: 1rem;
 
@@ -14,11 +14,11 @@
   padding: 0;
 }
 @media screen and (min-width: 768px) {
-  .ocha-key-figures__list {
+  .ocha-key-figures__list .form-checkboxes {
     --rwkf-num-cols: 2;
   }
 }
-.ocha-key-figures__list > li {
+.ocha-key-figures__list .form-checkboxes > div {
   display: block;
   margin: 0;
   padding: 0;
@@ -36,58 +36,57 @@
  * Shows a simple list of figures until it is 10 items long, then displays the
  * options in 3 columns.
  */
- .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+.ocha-key-figures__list .form-checkboxes > div:has(:nth-child(10)) {
   column-gap: 2rem;
 }
 
 @media only screen and (min-width: 600px) {
-  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+  .ocha-key-figures__list .form-checkboxes > div:has(:nth-child(10)) {
     columns: 2 auto;
   }
 }
 
 @media only screen and (min-width: 1200px) {
-  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+  .ocha-key-figures__list .form-checkboxes > div:has(:nth-child(10)) {
     columns: 3 auto;
   }
 }
 
 @media only screen and (min-width: 1600px) {
-  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+  .ocha-key-figures__list .form-checkboxes > div:has(:nth-child(10)) {
     columns: 4 auto;
   }
 }
 
 @media only screen and (min-width: 2000px) {
-  .field--name-field-figures .form-checkboxes:has(:nth-child(10)) {
+  .ocha-key-figures__list .form-checkboxes > div:has(:nth-child(10)) {
     columns: 5 auto;
   }
 }
 
-.field--name-field-figures .form-type-checkbox {
+.ocha-key-figures__list .form-checkboxes > div {
   overflow: hidden;
   max-width: 100%;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.field--name-field-figures .form-checkboxes--checkbox {
+.ocha-key-figures__list .form-checkboxes > div {
   break-inside: avoid;
   margin: 0;
   padding: 0.25rem;
   cursor: move;
 }
 
-.field--name-field-figures .form-checkboxes--checkbox:hover {
+.ocha-key-figures__list .form-checkboxes > div:hover {
   background: #0001;
   transition: background .1666s ease-in;
 }
 
-.field--name-field-figures .form-checkboxes--extra {
-  padding-inline-start: 1.1rem;
-  font-size: 90%;
-}
-
-.field--name-field-figures .form-checkboxes--extra label {
-  padding-inline-start: .333rem;
+.ocha-key-figures__list .form-checkboxes .form-type--boolean .form-boolean {
+  position: relative;
+  top: 0;
+  float: left;
+  margin: .3rem;
+  transform: none;
 }

@@ -8,6 +8,9 @@ ocha_key_figures.settings:
     ocha_api_key:
       type: string
       label: 'OCHA API Key'
+    ocha_app_name:
+      type: string
+      label: 'OCHA App Name'
     enable_json_ld:
       type: boolean
       label: 'Enable JSON-LD'
