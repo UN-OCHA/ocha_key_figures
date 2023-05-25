@@ -98,11 +98,16 @@ class KeyFigureBase extends FormatterBase {
   public function settingsSummary() {
     $summary = [];
 
-    $summary[] = $this->t('Display sparklines: @value', [
-      '@value' => $this->getSetting('display_sparklines') ?? 'no',
+    $format = $this->getSetting('format') ?? 'decimal';
+    $formats = NumberFormatter::getSupportedFormats();
+    $summary[] = $this->t('Format: @value', [
+      '@value' => $formats[$format] ?? ucfirst($format),
     ]);
-    $summary[] = $this->t('Output Json Ld: @value', [
-      '@value' => $this->getSetting('output_json_ld') ?? 'no',
+    $summary[] = $this->t('Precision: @value', [
+      '@value' => $this->getSetting('precision') ?? 1,
+    ]);
+    $summary[] = $this->t('Output style percentages: @value', [
+      '@value' => $this->getSetting('percentage') ?? 'yes',
     ]);
 
     return $summary;
