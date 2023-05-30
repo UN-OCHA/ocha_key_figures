@@ -54,15 +54,18 @@ class KeyFigureCondensed extends KeyFigureBase {
       $first = $items->first();
       $figures = $this->getFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
       foreach ($figures as $figure) {
+        // Set currency prefix if data is financial.
         if (isset($figure['valueType']) && $figure['valueType'] == 'amount') {
           $fig['prefix'] = $fig['unit'] ?? 'USD';
           if ($currency_symbol == 'yes') {
             $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
           }
         }
+
+        // Set percentage suffix if needed.
         if (isset($figure['valueType']) && $figure['valueType'] == 'percentage') {
           $figure['unit'] = $figure['unit'] ?? '%';
-          if ($percentage_formatted == 'no') {
+          if ($percentage_formatted != 'yes') {
             $figure['value'] /= 100;
           }
         }
