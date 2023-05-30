@@ -55,6 +55,7 @@ class KeyFigureBase extends FormatterBase {
       'format' => 'decimal',
       'precision' => 1,
       'percentage' => 'yes',
+      'currency_symbol' => 'yes',
     ] + parent::defaultSettings();
   }
 
@@ -77,6 +78,16 @@ class KeyFigureBase extends FormatterBase {
       '#default_value' => $this->getSetting('precision') ?? 1,
       '#description' => $this->t('Number of decimal digits in compact form: 1.2 million with a precision of
         1, 1.23 million with a precision of 2. Defaults to 1.'),
+    ];
+
+    $elements['currency_symbol'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Use currency symbol'),
+      '#options' => [
+        'yes' => $this->t('Yes'),
+        'no' => $this->t('No, use currency code'),
+      ],
+      '#default_value' => $this->getSetting('currency_symbol') ?? 'yes',
     ];
 
     $elements['percentage'] = [

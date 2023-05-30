@@ -25,6 +25,7 @@ class KeyFigureCondensed extends KeyFigureBase {
     $format = $this->getSetting('format');
     $precision = $this->getSetting('precision');
     $percentage_formatted = $this->getSetting('percentage');
+    $currency_symbol = $this->getSetting('currency_symbol');
 
     $theme_suggestions = implode('__', [
       $this->viewMode,
@@ -54,7 +55,10 @@ class KeyFigureCondensed extends KeyFigureBase {
       $figures = $this->getFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
       foreach ($figures as $figure) {
         if (isset($figure['valueType']) && $figure['valueType'] == 'amount') {
-          $figure['unit'] = $figure['unit'] ?? '$';
+          $fig['prefix'] = $fig['unit'] ?? 'USD';
+          if ($currency_symbol == 'yes') {
+            $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
+          }
         }
         if (isset($figure['valueType']) && $figure['valueType'] == 'percentage') {
           $figure['unit'] = $figure['unit'] ?? '%';

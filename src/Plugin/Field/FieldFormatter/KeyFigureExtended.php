@@ -98,6 +98,7 @@ class KeyFigureExtended extends KeyFigureBase {
     $format = $this->getSetting('format');
     $precision = $this->getSetting('precision');
     $percentage_formatted = $this->getSetting('percentage');
+    $currency_symbol = $this->getSetting('currency_symbol');
 
     $theme_suggestions = implode('__', [
       $this->viewMode,
@@ -177,7 +178,10 @@ class KeyFigureExtended extends KeyFigureBase {
       // Set dollar-sign prefix if data is financial.
       foreach ($data as &$fig) {
         if (isset($fig['valueType']) && $fig['valueType'] == 'amount') {
-          $fig['prefix'] = $fig['unit'] ?? '$';
+          $fig['prefix'] = $fig['unit'] ?? 'USD';
+          if ($currency_symbol == 'yes') {
+            $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
+          }
         }
       }
     }

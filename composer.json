@@ -2,5 +2,8 @@
     "name": "unocha/ocha_key_figures",
     "description": "UNOCHA Key Figures",
     "license": "GPL-2.0-or-later",
-    "type": "drupal-module"
+    "type": "drupal-module",
+    "dependencies": {
+        "symfony/intl": "^6.2"
+    }
 }
