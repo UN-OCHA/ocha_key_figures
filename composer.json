@@ -3,7 +3,7 @@
     "description": "UNOCHA Key Figures",
     "license": "GPL-2.0-or-later",
     "type": "drupal-module",
-    "dependencies": {
+    "require": {
         "symfony/intl": "^6.2"
     }
 }
