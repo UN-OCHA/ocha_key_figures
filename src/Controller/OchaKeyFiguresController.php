@@ -194,8 +194,17 @@ class OchaKeyFiguresController extends ControllerBase {
       // Merge historic values if present.
       if (isset($row['historic_values']) && is_array($row['historic_values'])) {
         foreach ($row['historic_values'] as $fig) {
+          // Handle invalid dates.
+          try {
+            $date = new \DateTime(substr($fig['date'], 0, 10));
+          } catch (\Throwable $th) {
+            $date_parts = explode('-', substr($fig['date'], 0, 10));
+            // Change day to 1.
+            $date_parts[2] = '01';
+            $date = new \DateTime(implode('-', $date_parts));
+          }
           $results[$row['name']]['values'][] = [
-            'date' => new \DateTime(substr($fig['date'], 0, 10)),
+            'date' => $date,
             'value' => $fig['value'],
           ];
         }

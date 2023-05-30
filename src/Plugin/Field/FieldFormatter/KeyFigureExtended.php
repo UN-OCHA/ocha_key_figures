@@ -132,6 +132,12 @@ class KeyFigureExtended extends KeyFigureBase {
 
     /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $first */
     $first = $items->first();
+
+    // Make sure we have at least 1 figure.
+    if (!$first) {
+      return [];
+    }
+
     $year = $first->getFigureYear();
     $sparklines = FALSE;
     if ($this->getSetting('display_sparklines') == 'all') {

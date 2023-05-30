@@ -469,7 +469,7 @@ class KeyFigureMultiple extends WidgetBase {
     $query = [
       'iso3' => $country,
       'year' => $year,
-      'archived' => FALSE,
+      'archived' => 0,
     ];
 
     // Special case for year.

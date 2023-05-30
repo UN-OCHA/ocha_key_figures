@@ -139,7 +139,7 @@ class KeyFigureBase extends FormatterBase {
     $data = $this->ochaKeyFiguresApiClient->query($provider, '', [
       'iso3' => $country,
       'year' => $year,
-      'archived' => FALSE,
+      'archived' => 0,
     ]);
 
     $figures = [];
