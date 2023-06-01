@@ -100,44 +100,10 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
         $unit = $item->getFigureUnit();
 
         if ($item->getFigureProvider() != 'manual') {
-          $ochapresences = $this->ochaKeyFiguresApiClient->getData('ocha_presences/' . $item->getFigureOchaPresence());
-          $iso3s = [];
-          foreach ($ochapresences['countries'] as $country) {
-            $iso3s[] = $country['id'];
-          }
-
-          $figures = $this->ochaKeyFiguresApiClient->getFiguresByFigureId($item->getFigureProvider(), $iso3s, $item->getFigureYear(), $item->getFigureId());
-
-          $data = NULL;
-          $cache_tags = [];
-          if (!empty($figures)) {
-            foreach ($figures as $figure) {
-              $cache_tags += $this->ochaKeyFiguresApiClient->getCacheTags($figure);
-
-              if (!isset($data)) {
-                $data = $figure;
-                $data['figure_list'] = [];
-              }
-              else {
-                switch ($data['valueType']) {
-                  case 'amount':
-                  case 'numeric':
-                    $data['value'] += $figure['value'];
-                    break;
-
-                  case 'percentage':
-                    $data['value'] = ($data['value'] + $figure['value']) / 2;
-                    break;
-
-                  default:
-                    // @todo needs more logic.
-                    $data['value'] += $figure['value'];
-
-                }
-                $data['figure_list'][] = $figure;
-              }
-            }
-          }
+          $iso3s = $this->ochaKeyFiguresApiClient->getOchaPresenceIso3($item->getFigureOchaPresence());
+          $data = $this->ochaKeyFiguresApiClient->getFigureByFigureId($item->getFigureProvider(), $iso3s, $item->getFigureYear(), $item->getFigureId());
+          $cache_tags = $data['cache_tags'];
+          unset($data['cache_tags']);
 
           $value = $data['value'];
           $unit = $data['unit'] ?? '';

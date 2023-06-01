@@ -233,10 +233,66 @@ class OchaKeyFiguresController extends ControllerBase {
     return $this->getData($prefix . '/' . $path, $query, $use_cache);
   }
 
+  public function getFiguresWithFigureId(string $provider, array $iso3, string $year) : array {
+    // Fetch data.
+    $prefix = $this->getPrefix($provider);
+
+    $query = [
+      'archived' => 0,
+      'iso3' => $iso3,
+      'year' => $year,
+    ];
+
+    // Special case for year.
+    if ($year == 1) {
+      // No need to filter.
+      unset($query['year']);
+    }
+    elseif ($year == 2) {
+      $query['year'] = date('Y');
+    }
+
+    $figures = $this->getData($prefix, $query);
+
+    $data = [];
+    if (!empty($figures)) {
+      foreach ($figures as $figure) {
+        if (empty($data[$figure['figure_id']])) {
+          $data[$figure['figure_id']] = $figure;
+          $data[$figure['figure_id']]['figure_list'] = [];
+          $data[$figure['figure_id']]['cache_tags'] = $this->getCacheTags($figure);
+        }
+        else {
+          switch ($data[$figure['figure_id']]['valueType']) {
+            case 'amount':
+            case 'numeric':
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+              break;
+
+            case 'percentage':
+              $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
+              break;
+
+            default:
+              // @todo needs more logic.
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+
+          }
+          $data[$figure['figure_id']]['figure_list'][] = $figure;
+          $data[$figure['figure_id']]['cache_tags'] += $this->getCacheTags($figure);
+          $data[$figure['figure_id']]['cache_tags'] = array_unique($data[$figure['figure_id']]['cache_tags']);
+        }
+      }
+
+    }
+
+    return $data;
+  }
+
   /**
-   * Get figures by figure id.
+   * Get aggregated figure by figure id.
    */
-  public function getFiguresByFigureId(string $provider, array $iso3, string $year, string $figure_id) : array {
+  public function getFigureByFigureId(string $provider, array $iso3, string $year, string $figure_id) : array {
     // Fetch data.
     $prefix = $this->getPrefix($provider);
 
@@ -246,7 +302,41 @@ class OchaKeyFiguresController extends ControllerBase {
       'figure_id' => $figure_id,
     ];
 
-    return $this->getData($prefix, $query);
+    $figures = $this->getData($prefix, $query);
+
+    $data = [];
+    if (!empty($figures)) {
+      foreach ($figures as $figure) {
+        if (empty($data)) {
+          $data = $figure;
+          $data['figure_list'] = [];
+          $data['cache_tags'] = $this->getCacheTags($figure);
+        }
+        else {
+          switch ($data['valueType']) {
+            case 'amount':
+            case 'numeric':
+              $data['value'] += $figure['value'];
+              break;
+
+            case 'percentage':
+              $data['value'] = ($data['value'] + $figure['value']) / 2;
+              break;
+
+            default:
+              // @todo needs more logic.
+              $data['value'] += $figure['value'];
+
+          }
+          $data['figure_list'][] = $figure;
+          $data['cache_tags'] += $this->getCacheTags($figure);
+        }
+      }
+
+      $data['cache_tags'] = array_unique($data['cache_tags']);
+    }
+
+    return $data;
   }
 
   /**
@@ -668,4 +758,17 @@ class OchaKeyFiguresController extends ControllerBase {
     return $cache_id;
   }
 
+  /**
+   * Get iso3 codes from OCHA Presence Id.
+   */
+  public function getOchaPresenceIso3(string $ocha_presence_id) : array {
+    $ochapresences = $this->getData('ocha_presences/' . $ocha_presence_id);
+
+    $iso3s = [];
+    foreach ($ochapresences['countries'] as $country) {
+      $iso3s[] = $country['id'];
+    }
+
+    return $iso3s;
+  }
 }

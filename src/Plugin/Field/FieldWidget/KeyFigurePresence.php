@@ -290,7 +290,7 @@ class KeyFigurePresence extends WidgetBase {
 
       // Get the list of years for the provider and ochapresence.
       if (!empty($ochapresence)) {
-        $years = $this->getFigureYears($provider, $ochapresence);
+        $years = $this->getOchaPresences($provider, $ochapresence);
         if (empty($years)) {
           $show_no_data = TRUE;
         }
@@ -415,7 +415,7 @@ class KeyFigurePresence extends WidgetBase {
   }
 
   /**
-   * Get the years available for the figure provider and given ochapresence.
+   * Get the OCHA Presences available for the figure provider.
    *
    * @param string $provider
    *   Provider.
@@ -425,36 +425,31 @@ class KeyFigurePresence extends WidgetBase {
    * @return array
    *   Associative array with year as keys and values.
    */
-  protected function getFigureYears($provider, $ocha_presence_id) {
+  protected function getOchaPresences($provider, $ocha_presence_id) {
     if ($provider === 'manual' && !empty($ochapresence)) {
       return [];
     }
 
-    $ochapresences = $this->ochaKeyFiguresApiClient->getData('ocha_presences/' . $ocha_presence_id);
-    $iso3s = [];
-    foreach ($ochapresences['countries'] as $country) {
-      $iso3s[] = $country['id'];
-    }
-
+    $iso3s = $this->ochaKeyFiguresApiClient->getOchaPresenceIso3($ocha_presence_id);
     $data = $this->ochaKeyFiguresApiClient->query($provider, 'years', [
       'iso3' => $iso3s,
       'order' => [
         'year' => 'desc',
       ],
     ]);
-    $years = [];
+
+    $ocha_presences = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        $years[$item['value']] = $item['label'];
+        $ocha_presences[$item['value']] = $item['label'];
       }
     }
-    // @todo add a "Latest" year option to instruct to always fetch the most
-    // recent figure if available?
-    return $years;
+
+    return $ocha_presences;
   }
 
   /**
-   * Get the figures available for the figure provider, ochapresence and year.
+   * Get the figures available for the figure provider, OCHA Presence and year.
    *
    * @param string $provider
    *   Provider.
@@ -471,28 +466,9 @@ class KeyFigurePresence extends WidgetBase {
       return [];
     }
 
-    $ochapresences = $this->ochaKeyFiguresApiClient->getData('ocha_presences/' . $ocha_presence_id);
-    $iso3s = [];
-    foreach ($ochapresences['countries'] as $country) {
-      $iso3s[] = $country['id'];
-    }
+    $iso3s = $this->ochaKeyFiguresApiClient->getOchaPresenceIso3($ocha_presence_id);
 
-    $query = [
-      'iso3' => $iso3s,
-      'year' => $year,
-      'archived' => 0,
-    ];
-
-    // Special case for year.
-    if ($year == 1) {
-      // No need to filter.
-      unset($query['year']);
-    }
-    elseif ($year == 2) {
-      $query['year'] = date('Y');
-    }
-
-    $data = $this->ochaKeyFiguresApiClient->query($provider, '', $query);
+    $data = $this->ochaKeyFiguresApiClient->getFiguresWithFigureId($provider, $iso3s, $year);
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
