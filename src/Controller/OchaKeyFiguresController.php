@@ -234,6 +234,22 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
+   * Get figures by figure id.
+   */
+  public function getFiguresByFigureId(string $provider, array $iso3, string $year, string $figure_id) : array {
+    // Fetch data.
+    $prefix = $this->getPrefix($provider);
+
+    $query = [
+      'iso3' => $iso3,
+      'year' => $year,
+      'figure_id' => $figure_id,
+    ];
+
+    return $this->getData($prefix, $query);
+  }
+
+  /**
    * Fetch Key Figures.
    *
    * @param string $path
@@ -246,7 +262,7 @@ class OchaKeyFiguresController extends ControllerBase {
    * @return array<string, mixed>
    *   Raw results.
    */
-  protected function getData(string $path, array $query = [], bool $use_cache = TRUE) : array {
+  public function getData(string $path, array $query = [], bool $use_cache = TRUE) : array {
     $endpoint = $this->apiUrl;
     $api_key = $this->apiKey;
     $app_name = $this->appName;
