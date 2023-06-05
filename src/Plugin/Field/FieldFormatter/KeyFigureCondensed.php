@@ -55,7 +55,7 @@ class KeyFigureCondensed extends KeyFigureBase {
       $figures = $this->getFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
       foreach ($figures as $figure) {
         // Set currency prefix if data is financial.
-        if (isset($figure['valueType']) && $figure['valueType'] == 'amount') {
+        if (isset($figure['value_type']) && $figure['value_type'] == 'amount') {
           $fig['prefix'] = $fig['unit'] ?? 'USD';
           if ($currency_symbol == 'yes') {
             $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
@@ -63,7 +63,7 @@ class KeyFigureCondensed extends KeyFigureBase {
         }
 
         // Set percentage suffix if needed.
-        if (isset($figure['valueType']) && $figure['valueType'] == 'percentage') {
+        if (isset($figure['value_type']) && $figure['value_type'] == 'percentage') {
           $figure['unit'] = $figure['unit'] ?? '%';
           if ($percentage_formatted != 'yes') {
             $figure['value'] /= 100;
@@ -97,7 +97,7 @@ class KeyFigureCondensed extends KeyFigureBase {
           $value = $data['value'];
           $unit = $data['unit'] ?? '';
 
-          if ($data['valueType'] == 'percentage') {
+          if ($data['value_type'] == 'percentage') {
             if ($percentage_formatted == 'no') {
               $value /= 100;
             }

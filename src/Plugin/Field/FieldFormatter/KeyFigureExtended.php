@@ -176,7 +176,7 @@ class KeyFigureExtended extends KeyFigureBase {
 
     foreach ($data as &$fig) {
       // Set currency prefix if data is financial.
-      if (isset($fig['valueType']) && $fig['valueType'] == 'amount') {
+      if (isset($fig['value_type']) && $fig['value_type'] == 'amount') {
         $fig['prefix'] = $fig['unit'] ?? 'USD';
         if ($currency_symbol == 'yes') {
           $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
@@ -184,7 +184,7 @@ class KeyFigureExtended extends KeyFigureBase {
       }
 
       // Set percentage suffix if needed.
-      if (isset($fig['valueType']) && $fig['valueType'] == 'percentage') {
+      if (isset($fig['value_type']) && $fig['value_type'] == 'percentage') {
         $fig['suffix'] = $fig['unit'] ?? '%';
         if ($percentage_formatted != 'yes') {
           $fig['value'] /= 100;

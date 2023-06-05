@@ -263,7 +263,7 @@ class OchaKeyFiguresController extends ControllerBase {
           $data[$figure['figure_id']]['cache_tags'] = $this->getCacheTags($figure);
         }
         else {
-          switch ($data[$figure['figure_id']]['valueType']) {
+          switch ($data[$figure['figure_id']]['value_type']) {
             case 'amount':
             case 'numeric':
               $data[$figure['figure_id']]['value'] += $figure['value'];
@@ -271,6 +271,16 @@ class OchaKeyFiguresController extends ControllerBase {
 
             case 'percentage':
               $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
+              break;
+
+            case 'list':
+              // Value is comnma separated list.
+              $values = explode(',', $data[$figure['figure_id']]['value']);
+              $values = array_map('trim', $values);
+
+              $new_values = explode(',', $figure['value']);
+              $new_values = array_map('trim', $new_values);
+              $data[$figure['figure_id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
               break;
 
             default:
@@ -313,7 +323,7 @@ class OchaKeyFiguresController extends ControllerBase {
           $data['cache_tags'] = $this->getCacheTags($figure);
         }
         else {
-          switch ($data['valueType']) {
+          switch ($data['value_type']) {
             case 'amount':
             case 'numeric':
               $data['value'] += $figure['value'];
@@ -321,6 +331,16 @@ class OchaKeyFiguresController extends ControllerBase {
 
             case 'percentage':
               $data['value'] = ($data['value'] + $figure['value']) / 2;
+              break;
+
+            case 'list':
+              // Value is comnma separated list.
+              $values = explode(',', $data['value']);
+              $values = array_map('trim', $values);
+
+              $new_values = explode(',', $figure['value']);
+              $new_values = array_map('trim', $new_values);
+              $data['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
               break;
 
             default:
@@ -445,7 +465,7 @@ class OchaKeyFiguresController extends ControllerBase {
     if ($sparklines) {
       foreach ($figures as $index => $figure) {
         if (isset($figure['values'])) {
-          if (!isset($figure['valueType']) || $figure['valueType'] === 'numeric') {
+          if (!isset($figure['value_type']) || $figure['value_type'] === 'numeric') {
             $figure['trend'] = $this->getKeyFigureTrend($figure['values']);
             $figure['sparkline'] = $this->getKeyFigureSparkline($figure['values']);
           }
