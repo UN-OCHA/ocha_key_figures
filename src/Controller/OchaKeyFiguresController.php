@@ -813,6 +813,20 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
+   * Get OCHA Presences.
+   */
+  public function getOchaPresences() : array {
+    return $this->getData('ocha_presences');
+  }
+
+  /**
+   * Get OCHA Presence.
+   */
+  public function getOchaPresence(string $id) : array {
+    return $this->getData('ocha_presences/' . $id);
+  }
+
+  /**
    * Get OCHA Presence figures.
    */
   public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year) : array {

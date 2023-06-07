@@ -6,3 +6,19 @@ ocha_key_figures.webhook:
   methods: [POST]
   requirements:
     _access: 'TRUE'
+
+ocha_key_figures.ocha_presences:
+  path: '/admin/structure/ocha_presences'
+  defaults:
+    _title: 'OCHA Presences'
+    _controller: '\Drupal\ocha_key_figures\Controller\OchaPresenceController::list'
+  requirements:
+    _permission: 'administer Students'
+
+ocha_key_figures.ocha_presences.edit:
+  path: '/admin/structure/ocha_presences/{id}'
+  defaults:
+    _title: 'OCHA Presences'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceForm'
+  requirements:
+    _permission: 'administer Students'
