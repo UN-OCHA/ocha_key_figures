@@ -106,46 +106,6 @@ class KeyFigurePresence extends WidgetBase {
   /**
    * {@inheritdoc}
    */
-  public static function defaultSettings() {
-    return [
-      'allow_manual' => 'yes',
-    ] + parent::defaultSettings();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
-    return [
-      'allow_manual' => [
-        '#type' => 'select',
-        '#options' => [
-          'yes' => $this->t('Yes'),
-          'no' => $this->t('No'),
-        ],
-        '#title' => $this->t('Allow manual numbers'),
-        '#default_value' => $this->getSetting('allow_manual'),
-        '#required' => TRUE,
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsSummary() {
-    $summary = [];
-
-    $summary[] = $this->t('Allow manual figures: @allow_manual', [
-      '@allow_manual' => $this->getSetting('allow_manual'),
-    ]);
-
-    return $summary;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected function handlesMultipleValues() {
     return FALSE;
   }
@@ -234,9 +194,6 @@ class KeyFigurePresence extends WidgetBase {
 
     $show_no_data = FALSE;
 
-    $allow_manual = $this->getSetting('allow_manual') == 'yes';
-    $manual = $provider === 'manual';
-
     // Add the ajax wrapper.
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
@@ -244,14 +201,7 @@ class KeyFigurePresence extends WidgetBase {
     // Get list of providers.
     $providers = [];
 
-    if ($allow_manual) {
-      $providers = [
-        'manual' => $this->t('Manual'),
-      ] + $this->ochaKeyFiguresApiClient->getSupportedProviders();
-    }
-    else {
-      $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
-    }
+    $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
 
     $element['provider'] = [
       '#type' => 'select',
@@ -264,7 +214,7 @@ class KeyFigurePresence extends WidgetBase {
     ];
 
     // Extra fields to select the data from a provider.
-    if (isset($provider) && !empty($provider) && !$manual) {
+    if (isset($provider) && !empty($provider)) {
       $label = NULL;
       $value = NULL;
       $unit = NULL;
@@ -290,7 +240,7 @@ class KeyFigurePresence extends WidgetBase {
 
       // Get the list of years for the provider and ochapresence.
       if (!empty($ochapresence)) {
-        $years = $this->getOchaPresences($provider, $ochapresence);
+        $years = $this->getOchaPresenceYearsByProvider($provider, $ochapresence);
         if (empty($years)) {
           $show_no_data = TRUE;
         }
@@ -301,7 +251,6 @@ class KeyFigurePresence extends WidgetBase {
 
           // Add option for current year and any year.
           $years = [
-            '1' => $this->t('Any year'),
             '2' => $this->t('Current year'),
           ] + $years;
 
@@ -332,7 +281,7 @@ class KeyFigurePresence extends WidgetBase {
           asort($figure_options);
 
           $element['id'] = [
-            '#type' => $manual ? 'hidden' : 'select',
+            '#type' => 'select',
             '#multiple' => FALSE,
             '#title' => $this->t('Key Figures'),
             '#options' => $figure_options,
@@ -357,32 +306,30 @@ class KeyFigurePresence extends WidgetBase {
       ];
     }
     else {
-      if ($manual || isset($label)) {
+      if (isset($label)) {
         $element['label'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Label'),
           '#default_value' => $label,
-          '#access' => $allow_manual,
         ];
       }
-      if ($manual || isset($value)) {
+      if (isset($value)) {
         $element['value'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Value'),
           '#default_value' => $value,
-          '#disabled' => !$manual,
-          '#access' => $allow_manual,
+          '#disabled' => TRUE,
         ];
 
         $element['unit'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Unit'),
           '#default_value' => $unit,
-          '#disabled' => !$manual,
-          '#access' => $allow_manual,
+          '#disabled' => TRUE,
         ];
       }
     }
+
 
     return $element;
   }
@@ -398,20 +345,7 @@ class KeyFigurePresence extends WidgetBase {
    *   values.
    */
   protected function getFigureOchaPresences($provider) {
-    if ($provider === 'manual') {
-      return [];
-    }
-    $data = $this->ochaKeyFiguresApiClient->query($provider, 'ocha-presences');
-    $ochapresences = [];
-    if (!empty($data)) {
-      foreach ($data as $item) {
-        $ochapresences[$item['value']] = $item['label'];
-      }
-    }
-
-    asort($ochapresences);
-
-    return $ochapresences;
+    return $this->ochaKeyFiguresApiClient->getOchaPresencesByProvider($provider);
   }
 
   /**
@@ -425,27 +359,8 @@ class KeyFigurePresence extends WidgetBase {
    * @return array
    *   Associative array with year as keys and values.
    */
-  protected function getOchaPresences($provider, $ocha_presence_id) {
-    if ($provider === 'manual' && !empty($ochapresence)) {
-      return [];
-    }
-
-    $iso3s = $this->ochaKeyFiguresApiClient->getOchaPresenceIso3($ocha_presence_id);
-    $data = $this->ochaKeyFiguresApiClient->query($provider, 'years', [
-      'iso3' => $iso3s,
-      'order' => [
-        'year' => 'desc',
-      ],
-    ]);
-
-    $ocha_presences = [];
-    if (!empty($data)) {
-      foreach ($data as $item) {
-        $ocha_presences[$item['value']] = $item['label'];
-      }
-    }
-
-    return $ocha_presences;
+  protected function getOchaPresenceYearsByProvider($provider, $ocha_presence_id) {
+    return $this->ochaKeyFiguresApiClient->getOchaPresenceYearsByProvider($provider, $ocha_presence_id);
   }
 
   /**
@@ -462,13 +377,8 @@ class KeyFigurePresence extends WidgetBase {
    *   Associative array keyed by figure ID and with figures data as values.
    */
   protected function getFigures($provider, $ocha_presence_id, $year) {
-    if ($provider === 'manual' || empty($ocha_presence_id)) {
-      return [];
-    }
+    $data = $this->ochaKeyFiguresApiClient->getOchaPresenceFigures($provider, $ocha_presence_id, $year);
 
-    $iso3s = $this->ochaKeyFiguresApiClient->getOchaPresenceIso3($ocha_presence_id);
-
-    $data = $this->ochaKeyFiguresApiClient->getFiguresWithFigureId($provider, $iso3s, $year);
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {

@@ -99,19 +99,17 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
         $value = $item->getFigureValue();
         $unit = $item->getFigureUnit();
 
-        if ($item->getFigureProvider() != 'manual') {
-          $iso3s = $this->ochaKeyFiguresApiClient->getOchaPresenceIso3($item->getFigureOchaPresence());
-          $data = $this->ochaKeyFiguresApiClient->getFigureByFigureId($item->getFigureProvider(), $iso3s, $item->getFigureYear(), $item->getFigureId());
-          $cache_tags = $data['cache_tags'];
-          unset($data['cache_tags']);
+        $data = $this->ochaKeyFiguresApiClient->getgetOchaPresenceFigureByFigureId($item->getFigureProvider(), $item->getFigureOchaPresence(), $item->getFigureYear(), $item->getFigureId());
+        $data = reset($data);
+        $cache_tags = $data['cache_tags'];
+        unset($data['cache_tags']);
 
-          $value = $data['value'];
-          $unit = $data['unit'] ?? '';
+        $value = $data['value'];
+        $unit = $data['unit'] ?? '';
 
-          if ($data['value_type'] == 'percentage') {
-            if ($percentage_formatted == 'no') {
-              $value /= 100;
-            }
+        if ($data['value_type'] == 'percentage') {
+          if ($percentage_formatted == 'no') {
+            $value /= 100;
           }
         }
 

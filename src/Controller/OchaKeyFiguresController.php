@@ -779,16 +779,104 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
-   * Get iso3 codes from OCHA Presence Id.
+   * Get OCHA Presences for provider.
    */
-  public function getOchaPresenceIso3(string $ocha_presence_id) : array {
-    $ochapresences = $this->getData('ocha_presences/' . $ocha_presence_id);
+  public function getOchaPresencesByProvider(string $provider) : array {
+    $prefix = $this->getPrefix($provider);
+    $ochapresences = $this->getData($prefix . '/ocha-presences');
 
-    $iso3s = [];
-    foreach ($ochapresences['countries'] as $country) {
-      $iso3s[] = $country['id'];
+    $options = [];
+    foreach ($ochapresences as $option) {
+      $options[$option['value']] = $option['label'];
     }
 
-    return $iso3s;
+    asort($option);
+
+    return $options;
   }
+
+  /**
+   * Get OCHA Presence years for provider.
+   */
+  public function getOchaPresenceYearsByProvider(string $provider, string $ocha_presence_id) : array {
+    $prefix = $this->getPrefix($provider);
+    $years = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/years');
+
+    $options = [];
+    foreach ($years as $option) {
+      $options[$option['value']] = $option['label'];
+    }
+
+    asort($option);
+
+    return $options;
+  }
+
+  /**
+   * Get OCHA Presence figures.
+   */
+  public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year) : array {
+    $prefix = $this->getPrefix($provider);
+    return $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures');
+  }
+
+  /**
+   * Get figure by figure id.
+   */
+  public function getgetOchaPresenceFigureByFigureId(string $provider, string $ocha_presence_id, string $year, string $figure_id) : array {
+    $prefix = $this->getPrefix($provider);
+    if ($year == 2) {
+      $year = date('Y');
+    }
+
+    $figures = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures', [
+      'figure_id' => $figure_id,
+    ]);
+
+    $data = [];
+    if (!empty($figures)) {
+      foreach ($figures as $figure) {
+        if (empty($data[$figure['figure_id']])) {
+          $data[$figure['figure_id']] = $figure;
+          $data[$figure['figure_id']]['figure_list'] = [];
+          $data[$figure['figure_id']]['cache_tags'] = $this->getCacheTags($figure);
+        }
+        else {
+          switch ($data[$figure['figure_id']]['value_type']) {
+            case 'amount':
+            case 'numeric':
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+              break;
+
+            case 'percentage':
+              $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
+              break;
+
+            case 'list':
+              // Value is comnma separated list.
+              $values = explode(',', $data[$figure['figure_id']]['value']);
+              $values = array_map('trim', $values);
+
+              $new_values = explode(',', $figure['value']);
+              $new_values = array_map('trim', $new_values);
+              $data[$figure['figure_id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
+              break;
+
+            default:
+              // @todo needs more logic.
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+
+          }
+          $data[$figure['figure_id']]['figure_list'][] = $figure;
+          $data[$figure['figure_id']]['cache_tags'] += $this->getCacheTags($figure);
+          $data[$figure['figure_id']]['cache_tags'] = array_unique($data[$figure['figure_id']]['cache_tags']);
+        }
+      }
+
+    }
+
+    return $data;
+
+  }
+
 }

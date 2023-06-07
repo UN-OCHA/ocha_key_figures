@@ -190,7 +190,7 @@ class KeyFigurePresence extends FieldItemBase {
     $constraints[] = $constraint_manager->create('ComplexData', [
       'ochapresence' => [
         'Length' => [
-          'max' => 10,
+          'max' => 255,
         ],
       ],
     ]);
