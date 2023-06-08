@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Provides the form for adding countries.
  */
-class OchaPresenceForm extends FormBase {
+class OchaPresenceIdsForm extends FormBase {
 
   /**
    * The OCHA Key Figures API client.
@@ -46,8 +46,8 @@ class OchaPresenceForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, string $id = '') {
-    $data = $this->ochaKeyFiguresApiClient->getOchaPresence($id);
+  public function buildForm(array $form, FormStateInterface $form_state, string $id = '', string $external_id = '') {
+    $data = $this->ochaKeyFiguresApiClient->getOchaPresenceExternal($external_id);
 
     $form['id'] = array(
       '#title' => $this->t('Id'),
@@ -56,56 +56,30 @@ class OchaPresenceForm extends FormBase {
       '#disabled' => TRUE,
     );
 
-    $form['name'] = array(
-      '#title' => $this->t('Name'),
-      '#type' => 'textfield',
-      '#default_value' => $data['name'],
+    $form['provider'] = array(
+      '#title' => $this->t('Provider'),
+      '#type' => 'select',
+      '#options' => $this->ochaKeyFiguresApiClient->getSupportedProviders(),
+      '#default_value' => $data['provider']['id'],
     );
 
-    $form['office_type'] = array(
-      '#title' => $this->t('Office type'),
+    $form['year'] = array(
+      '#title' => $this->t('Year'),
       '#type' => 'textfield',
-      '#default_value' => $data['office_type'],
+      '#default_value' => $data['year'],
     );
 
-    $form['external_ids'] = [
-      '#type' => 'table',
-      '#header' => [
-        $this->t('Id'),
-        $this->t('Provider'),
-        $this->t('Year'),
-        $this->t('External Ids'),
-        $this->t('Edit'),
-      ],
-      '#rows' => [],
-    ];
-
-    foreach ($data['ocha_presence_external_ids'] as $row) {
-      $table_row = [
-        $row['id'],
-        $row['provider']['name'],
-        $row['year'],
-      ];
-
-      $cell = [];
-      foreach ($row['external_ids'] as $ids_row) {
-        $cell[] = $ids_row['name'];
-      }
-      $table_row[] = implode(', ', $cell);
-
-      $table_row[] = [
-        'data' => [
-          '#type' => 'link',
-          '#title' => $this->t('Edit'),
-          '#url' => Url::fromRoute('ocha_key_figures.ocha_presences.ids.edit', [
-            'id' => $id,
-            'external_id' => $row['id'],
-          ]),
-        ],
-      ];
-
-      $form['external_ids']['#rows'][] = $table_row;
+    $default_external_ids = [];
+    foreach ($data['external_ids'] as $external_ids) {
+      $default_external_ids[] = $external_ids['id'];
     }
+    $form['external_ids'] = [
+      '#title' => $this->t('External options'),
+      '#type' => 'checkboxes',
+      '#multiple' => TRUE,
+      '#options' => $this->ochaKeyFiguresApiClient->getExternalLookup($data['provider']['id']),
+      '#default_value' => $default_external_ids,
+    ];
 
     return $form;
   }

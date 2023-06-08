@@ -827,6 +827,13 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
+   * Get OCHA Presence.
+   */
+  public function getOchaPresenceExternal(string $id) : array {
+    return $this->getData('ocha_presence_external_ids/' . $id);
+  }
+
+  /**
    * Get OCHA Presence figures.
    */
   public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year) : array {
@@ -891,6 +898,29 @@ class OchaKeyFiguresController extends ControllerBase {
 
     return $data;
 
+  }
+
+  /**
+   * Get the list of allowed values.
+   *
+   * @return array
+   *   List of options.
+   */
+  public function getExternalLookup(string $provider) {
+    $options = [];
+
+    $prefix = $this->getPrefix($provider);
+    $query = [
+      'provider' => $provider,
+    ];
+    $data = $this->getData('external_lookups', $query);
+
+    foreach ($data as $lookup) {
+      $options[$lookup['id']] = $lookup['name'];
+    }
+
+    asort($options);
+    return $options;
   }
 
 }

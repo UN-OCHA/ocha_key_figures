@@ -48,16 +48,16 @@ class OchaPresenceController extends ControllerBase {
   public function list() {
     $data = $this->ochaKeyFiguresApiClient->getOchaPresences();
 
-    $form['presences'] = array(
+    $form['presences'] = [
       '#type' => 'table',
-      '#header' => array(
+      '#header' => [
         $this->t('Id'),
         $this->t('Name'),
         $this->t('Office type'),
         $this->t('Operations'),
-      ),
+      ],
       '#rows' => [],
-    );
+    ];
 
     foreach ($data as $row) {
       $form['presences']['#rows'][] = [

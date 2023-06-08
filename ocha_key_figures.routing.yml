@@ -22,3 +22,11 @@ ocha_key_figures.ocha_presences.edit:
     _form: '\Drupal\ocha_key_figures\Form\OchaPresenceForm'
   requirements:
     _permission: 'administer Students'
+
+ocha_key_figures.ocha_presences.ids.edit:
+  path: '/admin/structure/ocha_presences/{id}/{external_id}'
+  defaults:
+    _title: 'OCHA Presence Ids'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceIdsForm'
+  requirements:
+    _permission: 'administer Students'
