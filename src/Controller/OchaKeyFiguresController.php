@@ -448,6 +448,86 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
+   * Fetch Key Figures.
+   *
+   * @param string $path
+   *   API path.
+   * @param array $query
+   *   Query options.
+   * @param bool $use_cache
+   *   Use caching.
+   *
+   * @return array<string, mixed>
+   *   Raw results.
+   */
+  public function setData(string $path, array $data = []) : array {
+    $endpoint = $this->apiUrl;
+    $api_key = $this->apiKey;
+    $app_name = $this->appName;
+
+    if (empty($endpoint)) {
+      return [];
+    }
+
+    // Cache tags.
+    $cache_tags = [
+      $this->cacheId,
+    ];
+
+    $path_parts = explode('/', $path);
+    for ($i = 0; $i < count($path_parts); $i++) {
+      $cache_tags[] = $this->cacheId . ':' . implode(':', array_slice($path_parts, 0, $i + 1));
+    }
+
+    $headers = [
+      'API-KEY' => $api_key,
+      'ACCEPT' => 'application/json',
+      'CONTENT-TYPE' => 'application/ld+json',
+      'APP-NAME' => $app_name,
+    ];
+
+    // Construct full URL without ending /.
+    $fullUrl = rtrim($endpoint . $path, '/');
+
+    if (!empty($query)) {
+      $fullUrl = $fullUrl . '?' . UrlHelper::buildQuery($query);
+    }
+
+    try {
+      $this->getLogger('ocha_key_figures_fts_figures')->notice('Updating data at @url', [
+        '@url' => $fullUrl,
+      ]);
+
+      $response = $this->httpClient->request(
+        'PUT',
+        $fullUrl,
+        [
+          'headers' => $headers,
+          'body' => json_encode($data),
+        ],
+      );
+    }
+    catch (RequestException $exception) {
+      $this->getLogger('ocha_key_figures_fts_figures')->error('Updating data on @url failed with @message', [
+        '@url' => $fullUrl,
+        '@message' => $exception->getMessage(),
+      ]);
+
+      if ($exception->getCode() === 404) {
+        throw new NotFoundHttpException();
+      }
+      else {
+        throw $exception;
+      }
+    }
+
+    $body = $response->getBody() . '';
+    $results = json_decode($body, TRUE);
+
+    return $results;
+  }
+
+  /**
    * Build key figures.
    *
    * @param array<string, mixed> $results
@@ -831,6 +911,13 @@ class OchaKeyFiguresController extends ControllerBase {
    */
   public function getOchaPresenceExternal(string $id) : array {
     return $this->getData('ocha_presence_external_ids/' . $id);
+  }
+
+  /**
+   * Set OCHA Presence.
+   */
+  public function setOchaPresenceExternal(string $id, $data) : array {
+    return $this->setData('ocha_presence_external_ids/' . $id, $data);
   }
 
   /**

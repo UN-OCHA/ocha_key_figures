@@ -107,6 +107,28 @@ class OchaPresenceForm extends FormBase {
       $form['external_ids']['#rows'][] = $table_row;
     }
 
+    $form['actions'] = [
+      '#type' => 'actions',
+    ];
+
+    $form['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Save'),
+    ];
+
+    $form['actions']['cancel'] = [
+      '#type' => 'link',
+      '#title' => t('Cancel'),
+      '#url' => Url::fromRoute('ocha_key_figures.ocha_presences'),
+      '#attributes' => [
+        'class' => [
+          'button',
+          'cancel',
+        ],
+      ],
+      '#weight' => 30,
+    ];
+
     return $form;
   }
 
@@ -114,7 +136,9 @@ class OchaPresenceForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $data = [
 
+    ];
   }
 
 }

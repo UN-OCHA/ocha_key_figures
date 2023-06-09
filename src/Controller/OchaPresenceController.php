@@ -68,7 +68,9 @@ class OchaPresenceController extends ControllerBase {
           'data' => [
             '#type' => 'link',
             '#title' => $this->t('Edit'),
-            '#url' => Url::fromRoute('ocha_key_figures.ocha_presences.edit', ['id' => $row['id']]),
+            '#url' => Url::fromRoute('ocha_key_figures.ocha_presences.edit', [
+              'id' => $row['id'],
+            ]),
           ],
         ]
       ];

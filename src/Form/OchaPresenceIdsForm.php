@@ -52,7 +52,14 @@ class OchaPresenceIdsForm extends FormBase {
     $form['id'] = array(
       '#title' => $this->t('Id'),
       '#type' => 'textfield',
-      '#default_value' => $data['id'],
+      '#default_value' => $id,
+      '#disabled' => TRUE,
+    );
+
+    $form['external_id'] = array(
+      '#title' => $this->t('Id'),
+      '#type' => 'textfield',
+      '#default_value' => $external_id,
       '#disabled' => TRUE,
     );
 
@@ -81,6 +88,30 @@ class OchaPresenceIdsForm extends FormBase {
       '#default_value' => $default_external_ids,
     ];
 
+    $form['actions'] = [
+      '#type' => 'actions',
+    ];
+
+    $form['actions']['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Save'),
+    ];
+
+    $form['actions']['cancel'] = [
+      '#type' => 'link',
+      '#title' => t('Cancel'),
+      '#url' => Url::fromRoute('ocha_key_figures.ocha_presences.edit', [
+        'id' => $id,
+      ]),
+      '#attributes' => [
+        'class' => [
+          'button',
+          'cancel',
+        ],
+      ],
+      '#weight' => 30,
+    ];
+
     return $form;
   }
 
@@ -88,7 +119,15 @@ class OchaPresenceIdsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $external_id = $form_state->getValue(['external_id']);
+    $data = $this->ochaKeyFiguresApiClient->getOchaPresenceExternal($external_id);
 
+    $data['ocha_presence'] = $form_state->getValue('id');
+    $data['provider'] = $form_state->getValue('provider');
+    $data['year'] = $form_state->getValue('year');
+    $data['external_ids'] = array_values(array_filter($form_state->getValue('external_ids')));
+
+    $data = $this->ochaKeyFiguresApiClient->setOchaPresenceExternal($external_id, $data);
   }
 
 }

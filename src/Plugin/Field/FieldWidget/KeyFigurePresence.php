@@ -382,14 +382,8 @@ class KeyFigurePresence extends WidgetBase {
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        if (!isset($figures[$item['figure_id']])) {
-          $figures[$item['figure_id']] = $item;
-          $figures[$item['figure_id']]['figure_list'] = [];
-        }
-        else {
-          $figures[$item['figure_id']]['value'] += $item['value'];
-          $figures[$item['figure_id']]['figure_list'][] = $item;
-        }
+        $figures[$item['figure_id']] = $item;
+        $figures[$item['figure_id']]['figure_list'] = [];
       }
     }
 
