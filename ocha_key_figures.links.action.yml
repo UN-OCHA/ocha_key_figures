@@ -1,0 +1,11 @@
+ocha_key_figures.ocha_presences.add:
+  route_name: ocha_key_figures.ocha_presences.add
+  title: 'Add OCHA Presences'
+  appears_on:
+    - ocha_key_figures.ocha_presences
+
+ocha_key_figures.ocha_presences.ids.add:
+  route_name: ocha_key_figures.ocha_presences.ids.add
+  title: 'Add OCHA Presence external Id'
+  appears_on:
+    - ocha_key_figures.ocha_presences.edit

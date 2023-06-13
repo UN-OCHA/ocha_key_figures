@@ -460,7 +460,7 @@ class OchaKeyFiguresController extends ControllerBase {
    * @return array<string, mixed>
    *   Raw results.
    */
-  public function setData(string $path, array $data = []) : array {
+  public function setData(string $path, array $data = [], $method = 'PUT') : array {
     $endpoint = $this->apiUrl;
     $api_key = $this->apiKey;
     $app_name = $this->appName;
@@ -499,7 +499,7 @@ class OchaKeyFiguresController extends ControllerBase {
       ]);
 
       $response = $this->httpClient->request(
-        'PUT',
+        $method,
         $fullUrl,
         [
           'headers' => $headers,
@@ -521,10 +521,13 @@ class OchaKeyFiguresController extends ControllerBase {
       }
     }
 
+    // Invalidate the cache.
+    cache::invalidateTags($cache_tags);
+
     $body = $response->getBody() . '';
     $results = json_decode($body, TRUE);
 
-    return $results;
+    return $results ?? [];
   }
 
   /**
@@ -907,6 +910,25 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
+   * Delete OCHA Presence.
+   */
+  public function deleteOchaPresence(string $id) : void {
+    $this->setData('ocha_presences/' . $id, [], 'DELETE');
+  }
+
+  /**
+   * Set OCHA Presence.
+   */
+  public function setOchaPresence(string $id, $data, $new = FALSE) : array {
+    if ($new) {
+      return $this->setData('ocha_presences', $data, 'POST');
+    }
+    else {
+      return $this->setData('ocha_presences/' . $id, $data);
+    }
+  }
+
+  /**
    * Get OCHA Presence.
    */
   public function getOchaPresenceExternal(string $id) : array {
@@ -914,10 +936,22 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
+   * Delete OCHA Presence.
+   */
+  public function deleteOchaPresenceExternal(string $id) : void {
+    $this->setData('ocha_presence_external_ids/' . $id, [], 'DELETE');
+  }
+
+  /**
    * Set OCHA Presence.
    */
-  public function setOchaPresenceExternal(string $id, $data) : array {
-    return $this->setData('ocha_presence_external_ids/' . $id, $data);
+  public function setOchaPresenceExternal(string $id, $data, $new = FALSE) : array {
+    if ($new) {
+      return $this->setData('ocha_presence_external_ids', $data, 'POST');
+    }
+    else {
+      return $this->setData('ocha_presence_external_ids/' . $id, $data);
+    }
   }
 
   /**

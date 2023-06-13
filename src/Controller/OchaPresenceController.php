@@ -54,7 +54,8 @@ class OchaPresenceController extends ControllerBase {
         $this->t('Id'),
         $this->t('Name'),
         $this->t('Office type'),
-        $this->t('Operations'),
+        $this->t('Edit'),
+        $this->t('Delete'),
       ],
       '#rows' => [],
     ];
@@ -69,6 +70,15 @@ class OchaPresenceController extends ControllerBase {
             '#type' => 'link',
             '#title' => $this->t('Edit'),
             '#url' => Url::fromRoute('ocha_key_figures.ocha_presences.edit', [
+              'id' => $row['id'],
+            ]),
+          ],
+        ],
+        [
+          'data' => [
+            '#type' => 'link',
+            '#title' => $this->t('Delete'),
+            '#url' => Url::fromRoute('ocha_key_figures.ocha_presences.delete', [
               'id' => $row['id'],
             ]),
           ],
