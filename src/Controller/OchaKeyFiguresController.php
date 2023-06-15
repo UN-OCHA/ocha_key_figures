@@ -233,6 +233,132 @@ class OchaKeyFiguresController extends ControllerBase {
     return $this->getData($prefix . '/' . $path, $query, $use_cache);
   }
 
+  public function getFiguresWithFigureId(string $provider, array $iso3, string $year) : array {
+    // Fetch data.
+    $prefix = $this->getPrefix($provider);
+
+    $query = [
+      'archived' => 0,
+      'iso3' => $iso3,
+      'year' => $year,
+    ];
+
+    // Special case for year.
+    if ($year == 1) {
+      // No need to filter.
+      unset($query['year']);
+    }
+    elseif ($year == 2) {
+      $query['year'] = date('Y');
+    }
+
+    $figures = $this->getData($prefix, $query);
+
+    $data = [];
+    if (!empty($figures)) {
+      foreach ($figures as $figure) {
+        if (empty($data[$figure['figure_id']])) {
+          $data[$figure['figure_id']] = $figure;
+          $data[$figure['figure_id']]['figure_list'] = [];
+          $data[$figure['figure_id']]['cache_tags'] = $this->getCacheTags($figure);
+        }
+        else {
+          switch ($data[$figure['figure_id']]['value_type']) {
+            case 'amount':
+            case 'numeric':
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+              break;
+
+            case 'percentage':
+              $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
+              break;
+
+            case 'list':
+              // Value is comnma separated list.
+              $values = explode(',', $data[$figure['figure_id']]['value']);
+              $values = array_map('trim', $values);
+
+              $new_values = explode(',', $figure['value']);
+              $new_values = array_map('trim', $new_values);
+              $data[$figure['figure_id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
+              break;
+
+            default:
+              // @todo needs more logic.
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+
+          }
+          $data[$figure['figure_id']]['figure_list'][] = $figure;
+          $data[$figure['figure_id']]['cache_tags'] += $this->getCacheTags($figure);
+          $data[$figure['figure_id']]['cache_tags'] = array_unique($data[$figure['figure_id']]['cache_tags']);
+        }
+      }
+
+    }
+
+    return $data;
+  }
+
+  /**
+   * Get aggregated figure by figure id.
+   */
+  public function getFigureByFigureId(string $provider, array $iso3, string $year, string $figure_id) : array {
+    // Fetch data.
+    $prefix = $this->getPrefix($provider);
+
+    $query = [
+      'iso3' => $iso3,
+      'year' => $year,
+      'figure_id' => $figure_id,
+    ];
+
+    $figures = $this->getData($prefix, $query);
+
+    $data = [];
+    if (!empty($figures)) {
+      foreach ($figures as $figure) {
+        if (empty($data)) {
+          $data = $figure;
+          $data['figure_list'] = [];
+          $data['cache_tags'] = $this->getCacheTags($figure);
+        }
+        else {
+          switch ($data['value_type']) {
+            case 'amount':
+            case 'numeric':
+              $data['value'] += $figure['value'];
+              break;
+
+            case 'percentage':
+              $data['value'] = ($data['value'] + $figure['value']) / 2;
+              break;
+
+            case 'list':
+              // Value is comnma separated list.
+              $values = explode(',', $data['value']);
+              $values = array_map('trim', $values);
+
+              $new_values = explode(',', $figure['value']);
+              $new_values = array_map('trim', $new_values);
+              $data['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
+              break;
+
+            default:
+              // @todo needs more logic.
+              $data['value'] += $figure['value'];
+
+          }
+          $data['figure_list'][] = $figure;
+          $data['cache_tags'] += $this->getCacheTags($figure);
+        }
+      }
+
+      $data['cache_tags'] = array_unique($data['cache_tags']);
+    }
+
+    return $data;
+  }
+
   /**
    * Fetch Key Figures.
    *
@@ -246,7 +372,7 @@ class OchaKeyFiguresController extends ControllerBase {
    * @return array<string, mixed>
    *   Raw results.
    */
-  protected function getData(string $path, array $query = [], bool $use_cache = TRUE) : array {
+  public function getData(string $path, array $query = [], bool $use_cache = TRUE) : array {
     $endpoint = $this->apiUrl;
     $api_key = $this->apiKey;
     $app_name = $this->appName;
@@ -322,6 +448,89 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   /**
+   * Fetch Key Figures.
+   *
+   * @param string $path
+   *   API path.
+   * @param array $query
+   *   Query options.
+   * @param bool $use_cache
+   *   Use caching.
+   *
+   * @return array<string, mixed>
+   *   Raw results.
+   */
+  public function setData(string $path, array $data = [], $method = 'PUT') : array {
+    $endpoint = $this->apiUrl;
+    $api_key = $this->apiKey;
+    $app_name = $this->appName;
+
+    if (empty($endpoint)) {
+      return [];
+    }
+
+    // Cache tags.
+    $cache_tags = [
+      $this->cacheId,
+    ];
+
+    $path_parts = explode('/', $path);
+    for ($i = 0; $i < count($path_parts); $i++) {
+      $cache_tags[] = $this->cacheId . ':' . implode(':', array_slice($path_parts, 0, $i + 1));
+    }
+
+    $headers = [
+      'API-KEY' => $api_key,
+      'ACCEPT' => 'application/json',
+      'CONTENT-TYPE' => 'application/ld+json',
+      'APP-NAME' => $app_name,
+    ];
+
+    // Construct full URL without ending /.
+    $fullUrl = rtrim($endpoint . $path, '/');
+
+    if (!empty($query)) {
+      $fullUrl = $fullUrl . '?' . UrlHelper::buildQuery($query);
+    }
+
+    try {
+      $this->getLogger('ocha_key_figures_fts_figures')->notice('Updating data at @url', [
+        '@url' => $fullUrl,
+      ]);
+
+      $response = $this->httpClient->request(
+        $method,
+        $fullUrl,
+        [
+          'headers' => $headers,
+          'body' => json_encode($data),
+        ],
+      );
+    }
+    catch (RequestException $exception) {
+      $this->getLogger('ocha_key_figures_fts_figures')->error('Updating data on @url failed with @message', [
+        '@url' => $fullUrl,
+        '@message' => $exception->getMessage(),
+      ]);
+
+      if ($exception->getCode() === 404) {
+        throw new NotFoundHttpException();
+      }
+      else {
+        throw $exception;
+      }
+    }
+
+    // Invalidate the cache.
+    cache::invalidateTags($cache_tags);
+
+    $body = $response->getBody() . '';
+    $results = json_decode($body, TRUE);
+
+    return $results ?? [];
+  }
+
+  /**
    * Build key figures.
    *
    * @param array<string, mixed> $results
@@ -339,7 +548,7 @@ class OchaKeyFiguresController extends ControllerBase {
     if ($sparklines) {
       foreach ($figures as $index => $figure) {
         if (isset($figure['values'])) {
-          if (!isset($figure['valueType']) || $figure['valueType'] === 'numeric') {
+          if (!isset($figure['value_type']) || $figure['value_type'] === 'numeric') {
             $figure['trend'] = $this->getKeyFigureTrend($figure['values']);
             $figure['sparkline'] = $this->getKeyFigureSparkline($figure['values']);
           }
@@ -650,6 +859,189 @@ class OchaKeyFiguresController extends ControllerBase {
     $cache_id .= ':' . md5(json_encode($query));
 
     return $cache_id;
+  }
+
+  /**
+   * Get OCHA Presences for provider.
+   */
+  public function getOchaPresencesByProvider(string $provider) : array {
+    $prefix = $this->getPrefix($provider);
+    $ochapresences = $this->getData($prefix . '/ocha-presences');
+
+    $options = [];
+    foreach ($ochapresences as $option) {
+      $options[$option['value']] = $option['label'];
+    }
+
+    asort($option);
+
+    return $options;
+  }
+
+  /**
+   * Get OCHA Presence years for provider.
+   */
+  public function getOchaPresenceYearsByProvider(string $provider, string $ocha_presence_id) : array {
+    $prefix = $this->getPrefix($provider);
+    $years = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/years');
+
+    $options = [];
+    foreach ($years as $option) {
+      $options[$option['value']] = $option['label'];
+    }
+
+    asort($option);
+
+    return $options;
+  }
+
+  /**
+   * Get OCHA Presences.
+   */
+  public function getOchaPresences() : array {
+    return $this->getData('ocha_presences');
+  }
+
+  /**
+   * Get OCHA Presence.
+   */
+  public function getOchaPresence(string $id) : array {
+    return $this->getData('ocha_presences/' . $id);
+  }
+
+  /**
+   * Delete OCHA Presence.
+   */
+  public function deleteOchaPresence(string $id) : void {
+    $this->setData('ocha_presences/' . $id, [], 'DELETE');
+  }
+
+  /**
+   * Set OCHA Presence.
+   */
+  public function setOchaPresence(string $id, $data, $new = FALSE) : array {
+    if ($new) {
+      return $this->setData('ocha_presences', $data, 'POST');
+    }
+    else {
+      return $this->setData('ocha_presences/' . $id, $data);
+    }
+  }
+
+  /**
+   * Get OCHA Presence.
+   */
+  public function getOchaPresenceExternal(string $id) : array {
+    return $this->getData('ocha_presence_external_ids/' . $id);
+  }
+
+  /**
+   * Delete OCHA Presence.
+   */
+  public function deleteOchaPresenceExternal(string $id) : void {
+    $this->setData('ocha_presence_external_ids/' . $id, [], 'DELETE');
+  }
+
+  /**
+   * Set OCHA Presence.
+   */
+  public function setOchaPresenceExternal(string $id, $data, $new = FALSE) : array {
+    if ($new) {
+      return $this->setData('ocha_presence_external_ids', $data, 'POST');
+    }
+    else {
+      return $this->setData('ocha_presence_external_ids/' . $id, $data);
+    }
+  }
+
+  /**
+   * Get OCHA Presence figures.
+   */
+  public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year) : array {
+    $prefix = $this->getPrefix($provider);
+    return $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures');
+  }
+
+  /**
+   * Get figure by figure id.
+   */
+  public function getgetOchaPresenceFigureByFigureId(string $provider, string $ocha_presence_id, string $year, string $figure_id) : array {
+    $prefix = $this->getPrefix($provider);
+    if ($year == 2) {
+      $year = date('Y');
+    }
+
+    $figures = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures', [
+      'figure_id' => $figure_id,
+    ]);
+
+    $data = [];
+    if (!empty($figures)) {
+      foreach ($figures as $figure) {
+        if (empty($data[$figure['figure_id']])) {
+          $data[$figure['figure_id']] = $figure;
+          $data[$figure['figure_id']]['figure_list'] = [];
+          $data[$figure['figure_id']]['cache_tags'] = $this->getCacheTags($figure);
+        }
+        else {
+          switch ($data[$figure['figure_id']]['value_type']) {
+            case 'amount':
+            case 'numeric':
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+              break;
+
+            case 'percentage':
+              $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
+              break;
+
+            case 'list':
+              // Value is comnma separated list.
+              $values = explode(',', $data[$figure['figure_id']]['value']);
+              $values = array_map('trim', $values);
+
+              $new_values = explode(',', $figure['value']);
+              $new_values = array_map('trim', $new_values);
+              $data[$figure['figure_id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
+              break;
+
+            default:
+              // @todo needs more logic.
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+
+          }
+          $data[$figure['figure_id']]['figure_list'][] = $figure;
+          $data[$figure['figure_id']]['cache_tags'] += $this->getCacheTags($figure);
+          $data[$figure['figure_id']]['cache_tags'] = array_unique($data[$figure['figure_id']]['cache_tags']);
+        }
+      }
+
+    }
+
+    return $data;
+
+  }
+
+  /**
+   * Get the list of allowed values.
+   *
+   * @return array
+   *   List of options.
+   */
+  public function getExternalLookup(string $provider) {
+    $options = [];
+
+    $prefix = $this->getPrefix($provider);
+    $query = [
+      'provider' => $provider,
+    ];
+    $data = $this->getData('external_lookups', $query);
+
+    foreach ($data as $lookup) {
+      $options[$lookup['id']] = $lookup['name'];
+    }
+
+    asort($options);
+    return $options;
   }
 
 }

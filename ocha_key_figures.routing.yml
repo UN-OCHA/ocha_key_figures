@@ -6,3 +6,59 @@ ocha_key_figures.webhook:
   methods: [POST]
   requirements:
     _access: 'TRUE'
+
+ocha_key_figures.ocha_presences:
+  path: '/admin/structure/ocha_presences'
+  defaults:
+    _title: 'OCHA Presences'
+    _controller: '\Drupal\ocha_key_figures\Controller\OchaPresenceController::list'
+  requirements:
+    _permission: 'administer ocha presences'
+
+ocha_key_figures.ocha_presences.add:
+  path: '/admin/structure/ocha_presences/add'
+  defaults:
+    _title: 'OCHA Presences'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceForm'
+  requirements:
+    _permission: 'administer ocha presences'
+
+ocha_key_figures.ocha_presences.edit:
+  path: '/admin/structure/ocha_presences/{id}/edit'
+  defaults:
+    _title: 'OCHA Presences'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceForm'
+  requirements:
+    _permission: 'administer ocha presences'
+
+ocha_key_figures.ocha_presences.delete:
+  path: '/admin/structure/ocha_presences/{id}/delete'
+  defaults:
+    _title: 'OCHA Presences'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceDeleteForm'
+  requirements:
+    _permission: 'administer ocha presences'
+
+ocha_key_figures.ocha_presences.ids.add:
+  path: '/admin/structure/ocha_presences/{id}/add'
+  defaults:
+    _title: 'OCHA Presence Ids'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceIdsForm'
+  requirements:
+    _permission: 'administer ocha presences'
+
+ocha_key_figures.ocha_presences.ids.edit:
+  path: '/admin/structure/ocha_presences/{id}/{external_id}/edit'
+  defaults:
+    _title: 'OCHA Presence Ids'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceIdsForm'
+  requirements:
+    _permission: 'administer ocha presences'
+
+ocha_key_figures.ocha_presences.ids.delete:
+  path: '/admin/structure/ocha_presences/{id}/{external_id}/delete'
+  defaults:
+    _title: 'OCHA Presence Ids'
+    _form: '\Drupal\ocha_key_figures\Form\OchaPresenceIdsDeleteForm'
+  requirements:
+    _permission: 'administer ocha presences'

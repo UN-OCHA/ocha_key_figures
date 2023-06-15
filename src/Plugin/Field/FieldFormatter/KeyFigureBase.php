@@ -138,7 +138,7 @@ class KeyFigureBase extends FormatterBase {
    *
    * @param string $provider
    *   Provider.
-   * @param string $country
+   * @param string|array $country
    *   ISO3 code of a country.
    * @param string $year
    *   Year.

@@ -9,14 +9,14 @@ use Drupal\ocha_key_figures\Helpers\NumberFormatter;
  * Plugin implementation of the 'key_figure' formatter.
  *
  * @FieldFormatter(
- *   id = "key_figure",
+ *   id = "key_figure_presence",
  *   label = @Translation("Key Figure - Condensed"),
  *   field_types = {
- *     "key_figure"
+ *     "key_figure_presence"
  *   }
  * )
  */
-class KeyFigureCondensed extends KeyFigureBase {
+class KeyFigurePresenceCondensed extends KeyFigureBase {
 
   /**
    * {@inheritdoc}
@@ -50,9 +50,16 @@ class KeyFigureCondensed extends KeyFigureBase {
     }
 
     if ($fetch_all) {
-      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $first */
+      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigureByRegion $first */
       $first = $items->first();
-      $figures = $this->getFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
+
+      $ochapresences = $this->ochaKeyFiguresApiClient->getData('ocha_presences/' . $first->getFigureOchaPresence());
+      $iso3s = [];
+      foreach ($ochapresences['countries'] as $country) {
+        $iso3s[] = $country['id'];
+      }
+
+      $figures = $this->getFigures($first->getFigureProvider(), $iso3s, $first->getFigureYear());
       foreach ($figures as $figure) {
         // Set currency prefix if data is financial.
         if (isset($figure['value_type']) && $figure['value_type'] == 'amount') {
@@ -86,21 +93,23 @@ class KeyFigureCondensed extends KeyFigureBase {
       }
     }
     else {
-      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $item */
+      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigurePresence $item */
       foreach ($items as $delta => $item) {
         $label = $item->getFigureLabel();
         $value = $item->getFigureValue();
         $unit = $item->getFigureUnit();
 
-        if ($item->getFigureProvider() != 'manual') {
-          $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider(), $item->getFigureId());
-          $value = $data['value'];
-          $unit = $data['unit'] ?? '';
+        $data = $this->ochaKeyFiguresApiClient->getgetOchaPresenceFigureByFigureId($item->getFigureProvider(), $item->getFigureOchaPresence(), $item->getFigureYear(), $item->getFigureId());
+        $data = reset($data);
+        $cache_tags = $data['cache_tags'];
+        unset($data['cache_tags']);
 
-          if ($data['value_type'] == 'percentage') {
-            if ($percentage_formatted == 'no') {
-              $value /= 100;
-            }
+        $value = $data['value'];
+        $unit = $data['unit'] ?? '';
+
+        if ($data['value_type'] == 'percentage') {
+          if ($percentage_formatted == 'no') {
+            $value /= 100;
           }
         }
 
@@ -111,11 +120,11 @@ class KeyFigureCondensed extends KeyFigureBase {
             '#label' => $label,
             '#value' => $value,
             '#unit' => $unit,
-            '#country' => $item->getFigureCountry(),
+            '#country' => $item->getFigureOchaPresence(),
             '#year' => $item->getFigureYear(),
             '#cache' => [
               'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
-              'tags' => $this->ochaKeyFiguresApiClient->getCacheTagsForFigure($item),
+              'tags' => $cache_tags,
             ],
           ];
         }
