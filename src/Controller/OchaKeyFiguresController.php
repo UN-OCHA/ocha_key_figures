@@ -1038,6 +1038,9 @@ class OchaKeyFiguresController extends ControllerBase {
 
     foreach ($data as $lookup) {
       $options[$lookup['id']] = $lookup['name'];
+      if (isset($lookup['year']) && !empty($lookup['year'])) {
+        $options[$lookup['id']] .= ' (' . $lookup['year'] . ')';
+      }
     }
 
     asort($options);

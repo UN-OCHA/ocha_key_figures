@@ -1,0 +1,5 @@
+ocha_key_figures.ocha_presences:
+  title: 'OCHA Presences'
+  parent: system.admin_structure
+  description: 'Create and manage OCHA Presences.'
+  route_name: ocha_key_figures.ocha_presences

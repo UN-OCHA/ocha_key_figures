@@ -61,18 +61,14 @@ class OchaPresenceIdsForm extends FormBase {
     ];
 
     $form['id'] = [
-      '#title' => $this->t('Id'),
-      '#type' => 'textfield',
-      '#default_value' => $id,
-      '#disabled' => TRUE,
+      '#title' => $this->t('OCHA Presence'),
+      '#type' => 'value',
+      '#value' => $id,
     ];
 
     $form['external_id'] = [
-      '#title' => $this->t('Id'),
-      '#type' => 'textfield',
-      '#default_value' => $external_id,
-      '#disabled' => TRUE,
-      '#access' => !$add,
+      '#type' => 'value',
+      '#value' => $external_id,
     ];
 
     $form['provider'] = [

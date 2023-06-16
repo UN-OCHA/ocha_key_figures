@@ -5,6 +5,8 @@
  * Themes and preprocessors for OCHA Key Figures.
  */
 
+use Drupal\Core\Link;
+
 /**
  * Implements hook_theme().
  */
@@ -46,6 +48,32 @@ function ocha_key_figures_theme($existing, $type, $theme, $path) {
         'year' => NULL,
       ],
     ],
-
   ];
+}
+
+/**
+ * Implements hook_system_breadcrumb_alter().
+ */
+function ocha_key_figures_system_breadcrumb_alter(\Drupal\Core\Breadcrumb\Breadcrumb &$breadcrumb, \Drupal\Core\Routing\RouteMatchInterface $route_match, array $context) {
+  $routes = [
+    'ocha_key_figures.ocha_presences.ids.add',
+    'ocha_key_figures.ocha_presences.ids.edit',
+    'ocha_key_figures.ocha_presences.ids.delete',
+  ];
+
+  if (!in_array($route_match->getRouteName(), $routes)) {
+    return;
+  }
+
+  $id = $route_match->getParameter('id');
+  if (empty($id)) {
+    return $breadcrumb;
+  }
+
+  $ocha_api = Drupal::service('ocha_key_figures.key_figures_controller');
+  $ocha_presence = $ocha_api->getOchaPresence($id);
+
+  $breadcrumb->addLink(Link::createFromRoute($ocha_presence['name'], 'ocha_key_figures.ocha_presences.edit', [
+    'id' => $id,
+  ]));
 }
