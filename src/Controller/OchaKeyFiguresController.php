@@ -421,23 +421,21 @@ class OchaKeyFiguresController extends ControllerBase {
         $fullUrl,
         ['headers' => $headers],
       );
+
+      $body = $response->getBody() . '';
+      $results = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
     }
     catch (RequestException $exception) {
       $this->getLogger('ocha_key_figures_fts_figures')->error('Fetching data from @url failed with @message', [
         '@url' => $fullUrl,
         '@message' => $exception->getMessage(),
       ]);
-
-      if ($exception->getCode() === 404) {
-        throw new NotFoundHttpException();
-      }
-      else {
-        throw $exception;
-      }
+      $results = [];
     }
 
-    $body = $response->getBody() . '';
-    $results = json_decode($body, TRUE);
+    if (!is_array($results)) {
+      $results = [];
+    }
 
     // Cache data.
     if ($use_cache) {

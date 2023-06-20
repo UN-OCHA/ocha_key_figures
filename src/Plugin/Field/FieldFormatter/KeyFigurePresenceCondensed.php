@@ -101,16 +101,21 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
 
         $data = $this->ochaKeyFiguresApiClient->getgetOchaPresenceFigureByFigureId($item->getFigureProvider(), $item->getFigureOchaPresence(), $item->getFigureYear(), $item->getFigureId());
         $data = reset($data);
-        $cache_tags = $data['cache_tags'];
-        unset($data['cache_tags']);
+        if (isset($data['value'], $data['value_type'])) {
+          $cache_tags = $data['cache_tags'];
+          unset($data['cache_tags']);
 
-        $value = $data['value'];
-        $unit = $data['unit'] ?? '';
+          $value = $data['value'];
+          $unit = $data['unit'] ?? '';
 
-        if ($data['value_type'] == 'percentage') {
-          if ($percentage_formatted == 'no') {
-            $value /= 100;
+          if ($data['value_type'] == 'percentage') {
+            if ($percentage_formatted == 'no') {
+              $value /= 100;
+            }
           }
+        }
+        else {
+          $value = (string) $this->t('N/A');
         }
 
         if (isset($label, $value)) {

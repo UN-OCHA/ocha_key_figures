@@ -93,14 +93,19 @@ class KeyFigureCondensed extends KeyFigureBase {
         $unit = $item->getFigureUnit();
 
         if ($item->getFigureProvider() != 'manual') {
-          $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider(), $item->getFigureId());
-          $value = $data['value'];
-          $unit = $data['unit'] ?? '';
+          $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider(), strtolower($item->getFigureId()));
+          if (isset($data['value'], $data['value_type'])) {
+            $value = $data['value'];
+            $unit = $data['unit'] ?? '';
 
-          if ($data['value_type'] == 'percentage') {
-            if ($percentage_formatted == 'no') {
-              $value /= 100;
+            if ($data['value_type'] == 'percentage') {
+              if ($percentage_formatted == 'no') {
+                $value /= 100;
+              }
             }
+          }
+          else {
+            $value = (string) $this->t('N/A');
           }
         }
 
