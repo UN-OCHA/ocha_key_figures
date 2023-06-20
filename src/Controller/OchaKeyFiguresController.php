@@ -873,7 +873,7 @@ class OchaKeyFiguresController extends ControllerBase {
       $options[$option['value']] = $option['label'];
     }
 
-    asort($option);
+    asort($options);
 
     return $options;
   }
@@ -890,7 +890,7 @@ class OchaKeyFiguresController extends ControllerBase {
       $options[$option['value']] = $option['label'];
     }
 
-    asort($option);
+    asort($options);
 
     return $options;
   }
