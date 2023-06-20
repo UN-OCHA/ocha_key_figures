@@ -97,6 +97,7 @@ class OchaPresenceIdsForm extends FormBase {
         '#title' => $this->t('External options'),
         '#type' => 'checkboxes',
         '#multiple' => TRUE,
+        '#required' => TRUE,
         '#options' => $this->ochaKeyFiguresApiClient->getExternalLookup($data['provider']['id']),
         '#default_value' => $default_external_ids,
       ];
