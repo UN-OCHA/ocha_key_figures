@@ -10,15 +10,15 @@ use Drupal\Core\Form\FormStateInterface;
  * Plugin implementation of the 'key_figure' widget.
  *
  * @FieldWidget(
- *   id = "key_figure_multiple",
+ *   id = "key_figure_presence_multiple",
  *   label = @Translation("Key Figure - Multiple"),
  *   field_types = {
- *     "key_figure"
+ *     "key_figure_presence"
  *   },
  *   multiple_values = TRUE,
  * )
  */
-class KeyFigureMultiple extends KeyFigureBaseWidget {
+class KeyFigurePresenceMultiple extends KeyFigureBaseWidget {
 
   /**
    * {@inheritdoc}
@@ -38,11 +38,12 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
 
     $values = $form_state->getValue($field_parents);
 
+    // Use the initial item values if there are no form input values.
     $trigger = $this->getTrigger($form_state, $element_parents);
     if (!$trigger) {
       foreach ($items as $item) {
         $values['provider'] = $item->getFigureProvider();
-        $values['country'] = $item->getFigureCountry();
+        $values['ochapresence'] = $item->getFigureOchaPresence();
         $values['year'] = $item->getFigureYear();
         $values['id'][] = $item->getFigureId();
       }
@@ -51,17 +52,20 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
       // Unset some values based on the ajax form rebuild triggering.
       switch ($trigger) {
         case 'provider':
-          unset($values['country'], $values['year'], $values['id']);
+          unset($values['ochapresence'], $values['year'], $values['id'], $values['label'], $values['value'], $values['unit']);
           break;
 
-        case 'country':
-          unset($values['year'], $values['id']);
+        case 'ochapresence':
+          unset($values['year'], $values['id'], $values['label'], $values['value'], $values['unit']);
           break;
 
         case 'year':
-          unset($values['id']);
+          unset($values['id'], $values['label'], $values['value'], $values['unit']);
           break;
 
+        case 'id':
+          unset($values['label'], $values['value'], $values['unit']);
+          break;
       }
 
       // Clear the user input so that the form uses the default values.
@@ -70,9 +74,9 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
 
     // Default values.
     $provider = $values['provider'] ?? NULL;
-    $country = $values['country'] ?? NULL;
+    $ochapresence = $values['ochapresence'] ?? NULL;
     $year = $values['year'] ?? NULL;
-    $figure_ids = $values['id'] ?? [];
+    $figure_ids = $values['id'] ?? NULL;
 
     $show_no_data = FALSE;
 
@@ -83,17 +87,21 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
     $element['provider'] = $this->getDropdownForProvider($provider, $field_parents, '', $wrapper_id);
 
     // Extra fields to select the data from a provider.
-    if (isset($provider)) {
-      $element['country'] = $this->getDropdownForCountry($provider, $country, $field_parents, '', $wrapper_id);
+    if (isset($provider) && !empty($provider)) {
+      $label = NULL;
+      $value = NULL;
+      $unit = NULL;
 
-      // Get the list of years for the provider and country.
-      if (!empty($country)) {
-        $element['year'] = $this->getDropdownForYears($provider, $country, $year, $field_parents, '', $wrapper_id);
+      $element['ochapresence'] = $this->getDropdownForOchaPresense($provider, $ochapresence, $field_parents, '', $wrapper_id);
+
+      // Get the list of years for the provider and ochapresence.
+      if (!empty($ochapresence)) {
+        $element['year'] = $this->getDropdownForOchaPresenceYears($provider, $ochapresence, $year, $field_parents, '', $wrapper_id);
       }
 
-      // Get the list of figures for the provider, country and year.
-      if (!empty($country) && !empty($year)) {
-        $figures = $this->getFigures($provider, $country, $year);
+      // Get the list of figures for the provider, ochapresence and year.
+      if (!empty($ochapresence) && !empty($year)) {
+        $figures = $this->getOchaPresenceFigures($provider, $ochapresence, $year);
         if (empty($figures)) {
           $show_no_data = TRUE;
         }
@@ -154,6 +162,31 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
         '#markup' => $this->t('No data available. This figure will not be saved.'),
       ];
     }
+    else {
+      if (isset($label)) {
+        $element['label'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Label'),
+          '#default_value' => $label,
+        ];
+      }
+      if (isset($value)) {
+        $element['value'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Value'),
+          '#default_value' => $value,
+          '#disabled' => TRUE,
+        ];
+
+        $element['unit'] = [
+          '#type' => 'textfield',
+          '#title' => $this->t('Unit'),
+          '#default_value' => $unit,
+          '#disabled' => TRUE,
+        ];
+      }
+    }
+
 
     return $element;
   }
@@ -166,7 +199,7 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
       return [];
     }
 
-    if (!isset($values['country'])) {
+    if (!isset($values['ochapresence'])) {
       return [];
     }
 
@@ -179,7 +212,7 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
     }
 
     $sort_order = explode($this->separator, $values['sort_order']);
-    $figures = $this->getFigures($values['provider'], $values['country'], $values['year']);
+    $figures = $this->getOchaPresenceFigures($values['provider'], $values['ochapresence'], $values['year']);
 
     $ids = $values['id'];
     $ids = array_filter($ids);
@@ -190,7 +223,7 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
       if ($id == '_all') {
         $data[] = [
           'provider' => $values['provider'],
-          'country' => $values['country'],
+          'ochapresence' => $values['ochapresence'],
           'year' => $values['year'],
           'id' => $id,
           'value' => '_all',
@@ -200,7 +233,7 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
       elseif (isset($figures[$id])) {
         $data[] = [
           'provider' => $values['provider'],
-          'country' => $values['country'],
+          'ochapresence' => $values['ochapresence'],
           'year' => $values['year'],
           'id' => $id,
           'value' => $figures[$id]['value'],

@@ -2,19 +2,9 @@
 
 namespace Drupal\ocha_key_figures\Plugin\Field\FieldWidget;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\ocha_key_figures\Controller\OchaKeyFiguresController;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Plugin implementation of the 'key_figure' widget.
@@ -24,153 +14,17 @@ use Symfony\Component\HttpFoundation\Request;
  *   label = @Translation("Key Figure - Simple"),
  *   field_types = {
  *     "key_figure"
- *   }
+ *   },
+ *   multiple_values = FALSE,
  * )
  */
-class KeyFigure extends WidgetBase {
-
-  /**
-   * The logger service.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
-   * The renderer service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The OCHA Key Figures API client.
-   *
-   * @var \Drupal\ocha_key_figures\Controller\OchaKeyFiguresController
-   */
-  protected $ochaKeyFiguresApiClient;
-
-  /**
-   * Ajax wrapper ID.
-   *
-   * @var string
-   */
-  protected $ajaxWrapperId;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(
-    $plugin_id,
-    $plugin_definition,
-    FieldDefinitionInterface $field_definition,
-    array $settings,
-    array $third_party_settings,
-    LoggerChannelFactoryInterface $logger_factory,
-    RendererInterface $renderer,
-    OchaKeyFiguresController $ocha_key_figure_api_client
-  ) {
-    parent::__construct(
-      $plugin_id,
-      $plugin_definition,
-      $field_definition,
-      $settings,
-      $third_party_settings
-    );
-    $this->logger = $logger_factory->get('unocha_figure_widget');
-    $this->renderer = $renderer;
-    $this->ochaKeyFiguresApiClient = $ocha_key_figure_api_client;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(
-    ContainerInterface $container,
-    array $configuration,
-    $plugin_id,
-    $plugin_definition
-  ) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['third_party_settings'],
-      $container->get('logger.factory'),
-      $container->get('renderer'),
-      $container->get('ocha_key_figures.key_figures_controller')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function defaultSettings() {
-    return [
-      'allow_manual' => 'yes',
-    ] + parent::defaultSettings();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
-    return [
-      'allow_manual' => [
-        '#type' => 'select',
-        '#options' => [
-          'yes' => $this->t('Yes'),
-          'no' => $this->t('No'),
-        ],
-        '#title' => $this->t('Allow manual numbers'),
-        '#default_value' => $this->getSetting('allow_manual'),
-        '#required' => TRUE,
-      ],
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsSummary() {
-    $summary = [];
-
-    $summary[] = $this->t('Allow manual figures: @allow_manual', [
-      '@allow_manual' => $this->getSetting('allow_manual'),
-    ]);
-
-    return $summary;
-  }
+class KeyFigure extends KeyFigureBaseWidget {
 
   /**
    * {@inheritdoc}
    */
   protected function handlesMultipleValues() {
     return FALSE;
-  }
-
-  /**
-   * Get the name of the element that triggered the form.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   * @param array $element_parents
-   *   The list of parents of the current key figure field element.
-   *
-   * @return string|null
-   *   The name of the subfield of the element that was the trigger if any.
-   */
-  protected function getTrigger(FormStateInterface $form_state, array $element_parents) {
-    $triggering_element = $form_state->getTriggeringElement();
-    if (!empty($triggering_element['#array_parents'])) {
-      $triggering_element_parents = $triggering_element['#array_parents'];
-      $triggering_element_name = array_pop($triggering_element_parents);
-      if ($triggering_element_parents === $element_parents) {
-        return $triggering_element_name;
-      }
-    }
-    return NULL;
   }
 
   /**
@@ -241,27 +95,7 @@ class KeyFigure extends WidgetBase {
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
 
-    // Get list of providers.
-    $providers = [];
-
-    if ($allow_manual) {
-      $providers = [
-        'manual' => $this->t('Manual'),
-      ] + $this->ochaKeyFiguresApiClient->getSupportedProviders();
-    }
-    else {
-      $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
-    }
-
-    $element['provider'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Provider'),
-      '#options' => $providers,
-      '#default_value' => $provider,
-      '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
-      '#empty_option' => $this->t('- Select -'),
-      '#empty_value' => '',
-    ];
+    $element['provider'] = $this->getDropdownForProvider($provider, $field_parents, $delta, $wrapper_id, TRUE);
 
     // Extra fields to select the data from a provider.
     if (isset($provider) && !empty($provider) && !$manual) {
@@ -270,51 +104,11 @@ class KeyFigure extends WidgetBase {
       $unit = NULL;
 
       // Get the list of countries for the provider.
-      $countries = $this->getFigureCountries($provider);
-      if (empty($countries)) {
-        $show_no_data = TRUE;
-      }
-      else {
-        $country = isset($countries[$country]) ? $country : NULL;
-
-        $element['country'] = [
-          '#type' => 'select',
-          '#title' => $this->t('Country'),
-          '#options' => $countries,
-          '#default_value' => $country,
-          '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
-          '#empty_option' => $this->t('- Select -'),
-          '#empty_value' => '',
-        ];
-      }
+      $element['country'] = $this->getDropdownForCountry($provider, $country, $field_parents, $delta, $wrapper_id);
 
       // Get the list of years for the provider and country.
       if (!empty($country)) {
-        $years = $this->getFigureYears($provider, $country);
-        if (empty($years)) {
-          $show_no_data = TRUE;
-        }
-        else {
-          if ($year > 2) {
-            $year = isset($years[$year]) ? $year : NULL;
-          }
-
-          // Add option for current year and any year.
-          $years = [
-            '1' => $this->t('Any year'),
-            '2' => $this->t('Current year'),
-          ] + $years;
-
-          $element['year'] = [
-            '#type' => 'select',
-            '#title' => $this->t('Year'),
-            '#options' => $years,
-            '#default_value' => $year,
-            '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
-            '#empty_option' => $this->t('- Select -'),
-            '#empty_value' => '',
-          ];
-        }
+        $element['year'] = $this->getDropdownForYears($provider, $country, $year, $field_parents, $delta, $wrapper_id);
       }
 
       // Get the list of figures for the provider, country and year.
@@ -385,200 +179,6 @@ class KeyFigure extends WidgetBase {
     }
 
     return $element;
-  }
-
-  /**
-   * Get the contries available for the figure provider.
-   *
-   * @param string $provider
-   *   Provider.
-   *
-   * @return array
-   *   Associative array keyed by country iso3 code and with country names as
-   *   values.
-   */
-  protected function getFigureCountries($provider) {
-    if ($provider === 'manual') {
-      return [];
-    }
-    $data = $this->ochaKeyFiguresApiClient->query($provider, 'countries');
-    $countries = [];
-    if (!empty($data)) {
-      foreach ($data as $item) {
-        $countries[$item['value']] = $item['label'];
-      }
-    }
-
-    asort($countries);
-
-    return $countries;
-  }
-
-  /**
-   * Get the years available for the figure provider and given country.
-   *
-   * @param string $provider
-   *   Provider.
-   * @param string $country
-   *   ISO3 code of a country.
-   *
-   * @return array
-   *   Associative array with year as keys and values.
-   */
-  protected function getFigureYears($provider, $country) {
-    if ($provider === 'manual' && !empty($country)) {
-      return [];
-    }
-    $data = $this->ochaKeyFiguresApiClient->query($provider, 'years', [
-      'iso3' => $country,
-      'order' => [
-        'year' => 'desc',
-      ],
-    ]);
-    $years = [];
-    if (!empty($data)) {
-      foreach ($data as $item) {
-        $years[$item['value']] = $item['label'];
-      }
-    }
-    // @todo add a "Latest" year option to instruct to always fetch the most
-    // recent figure if available?
-    return $years;
-  }
-
-  /**
-   * Get the figures available for the figure provider, country and year.
-   *
-   * @param string $provider
-   *   Provider.
-   * @param string $country
-   *   ISO3 code of a country.
-   * @param string $year
-   *   Year.
-   *
-   * @return array
-   *   Associative array keyed by figure ID and with figures data as values.
-   */
-  protected function getFigures($provider, $country, $year) {
-    if ($provider === 'manual' || empty($country)) {
-      return [];
-    }
-
-    $query = [
-      'iso3' => $country,
-      'year' => $year,
-      'archived' => 0,
-    ];
-
-    // Special case for year.
-    if ($year == 1) {
-      // No need to filter.
-      unset($query['year']);
-    }
-    elseif ($year == 2) {
-      $query['year'] = date('Y');
-    }
-
-    $data = $this->ochaKeyFiguresApiClient->query($provider, '', $query);
-    $figures = [];
-    if (!empty($data)) {
-      foreach ($data as $item) {
-        $figures[$item['id']] = $item;
-      }
-    }
-
-    asort($figures);
-
-    return $figures;
-  }
-
-  /**
-   * Get the base ajax settings for the operation in the widget.
-   *
-   * @param string $message
-   *   The message to display while the request is being performed.
-   * @param array $field_parents
-   *   The parents of the field.
-   * @param int $delta
-   *   The delta of the field element.
-   * @param string $wrapper_id
-   *   The ID of the wrapping HTML element which is going to be replaced.
-   *
-   * @return array
-   *   Array with the ajax settings.
-   */
-  protected function getAjaxSettings($message, array $field_parents, $delta, $wrapper_id) {
-    $path = array_merge($field_parents, ['widget', $delta]);
-
-    return [
-      'callback' => [static::class, 'rebuildWidgetForm'],
-      'options' => [
-        'query' => [
-          // This will be used in the ::rebuildWidgetForm() callback to
-          // retrieve the widget.
-          'element_path' => implode('/', $path),
-        ],
-      ],
-      'wrapper' => $wrapper_id,
-      'effect' => 'fade',
-      'progress' => [
-        'type' => 'throbber',
-        'message' => $message,
-      ],
-      'disable-refocus' => TRUE,
-    ];
-  }
-
-  /**
-   * Get the ajax wrapper id for the field.
-   *
-   * @param array $field_parents
-   *   The parents of the field.
-   * @param int $delta
-   *   The delta of the field element.
-   *
-   * @return string
-   *   Wrapper ID.
-   */
-  protected function getAjaxWrapperId(array $field_parents, $delta) {
-    return Html::getUniqueId(implode('-', $field_parents) . '-' . $delta . '-ajax-wrapper');
-  }
-
-  /**
-   * Rebuild form.
-   *
-   * @param array $form
-   *   The build form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The current request.
-   *
-   * @return \Drupal\Core\Ajax\AjaxResponse
-   *   The ajax response of the ajax upload.
-   */
-  public static function rebuildWidgetForm(array &$form, FormStateInterface $form_state, Request $request) {
-    // Retrieve the updated widget.
-    $parameter = $request->query->get('element_path');
-    $path = is_string($parameter) ? explode('/', trim($parameter)) : NULL;
-
-    $response = new AjaxResponse();
-
-    if (isset($path)) {
-      // The array parents are populated in the WidgetBase::afterBuild().
-      $element = NestedArray::getValue($form, $path);
-
-      if (isset($element)) {
-        // Remove the weight field as it's been handled by the tabledrag script
-        // and would appear twice otherwise.
-        unset($element['_weight']);
-
-        // This will replace the widget with the new one in the form.
-        $response->addCommand(new ReplaceCommand(NULL, $element));
-      }
-    }
-
-    return $response;
   }
 
 }

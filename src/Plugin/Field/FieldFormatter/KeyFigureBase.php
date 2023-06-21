@@ -166,4 +166,101 @@ class KeyFigureBase extends FormatterBase {
     return $figures;
   }
 
+  /**
+   * Get the figures available for the figure provider, OCHA Presence and year.
+   *
+   * @param string $provider
+   *   Provider.
+   * @param string $ocha_presence_id
+   *   ISO3 code of a ocha_presence_id.
+   * @param string $year
+   *   Year.
+   *
+   * @return array
+   *   Associative array keyed by figure ID and with figures data as values.
+   */
+  protected function getOchaPresenceFigures($provider, $ocha_presence_id, $year) {
+    $data = $this->ochaKeyFiguresApiClient->getOchaPresenceFigures($provider, $ocha_presence_id, $year);
+
+    $figures = [];
+    if (!empty($data)) {
+      foreach ($data as $item) {
+        $figures[$item['figure_id']] = $item;
+        $figures[$item['figure_id']]['figure_list'] = [];
+      }
+    }
+
+    foreach ($figures as $key => $row) {
+      $figures[$key]['date'] = new \DateTime($row['year'] . '-01-01');
+      if (isset($row['updated']) && !empty($row['updated'])) {
+        $figures[$key]['date'] = new \DateTime(substr($row['updated'], 0, 10));
+      }
+    }
+
+    asort($figures);
+
+    return $figures;
+  }
+
+  /**
+   * Get the figures available for the figure provider, OCHA Presence and year.
+   *
+   * @param string $provider
+   *   Provider.
+   * @param string $ocha_presence_id
+   *   ISO3 code of a ocha_presence_id.
+   * @param string $year
+   *   Year.
+   *
+   * @return array
+   *   Associative array keyed by figure ID and with figures data as values.
+   */
+  protected function getOchaPresenceFiguresGrouped($provider, $ocha_presence_id, $year) {
+    $figures = $this->ochaKeyFiguresApiClient->getOchaPresenceFigures($provider, $ocha_presence_id, $year);
+
+    $data = [];
+    if (!empty($figures)) {
+      foreach ($figures as $figure) {
+        if (empty($data[$figure['figure_id']])) {
+          $data[$figure['figure_id']] = $figure;
+          $data[$figure['figure_id']]['figure_list'] = [];
+          $data[$figure['figure_id']]['cache_tags'] = $this->ochaKeyFiguresApiClient->getCacheTags($figure);
+        }
+        else {
+          switch ($data[$figure['figure_id']]['value_type']) {
+            case 'amount':
+            case 'numeric':
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+              break;
+
+            case 'percentage':
+              $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
+              break;
+
+            case 'list':
+              // Value is comnma separated list.
+              $values = explode(',', $data[$figure['figure_id']]['value']);
+              $values = array_map('trim', $values);
+
+              $new_values = explode(',', $figure['value']);
+              $new_values = array_map('trim', $new_values);
+              $data[$figure['figure_id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
+              break;
+
+            default:
+              // @todo needs more logic.
+              $data[$figure['figure_id']]['value'] += $figure['value'];
+
+          }
+          $data[$figure['figure_id']]['figure_list'][] = $figure;
+          $data[$figure['figure_id']]['cache_tags'] += $this->ochaKeyFiguresApiClient->getCacheTags($figure);
+          $data[$figure['figure_id']]['cache_tags'] = array_unique($data[$figure['figure_id']]['cache_tags']);
+        }
+      }
+
+    }
+
+    return $data;
+  }
+
 }

@@ -50,16 +50,10 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
     }
 
     if ($fetch_all) {
-      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigureByRegion $first */
+      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigurePresence $first */
       $first = $items->first();
 
-      $ochapresences = $this->ochaKeyFiguresApiClient->getData('ocha_presences/' . $first->getFigureOchaPresence());
-      $iso3s = [];
-      foreach ($ochapresences['countries'] as $country) {
-        $iso3s[] = $country['id'];
-      }
-
-      $figures = $this->getFigures($first->getFigureProvider(), $iso3s, $first->getFigureYear());
+      $figures = $this->getOchaPresenceFigures($first->getFigureProvider(), $first->getFigureOchaPresence(), $first->getFigureYear());
       foreach ($figures as $figure) {
         // Set currency prefix if data is financial.
         if (isset($figure['value_type']) && $figure['value_type'] == 'amount') {
