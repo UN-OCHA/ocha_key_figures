@@ -105,8 +105,6 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
   public static function defaultSettings() {
     return [
       'allow_manual' => 'yes',
-      'allowed_providers' => '',
-      'allowed_figure_ids' => '',
     ] + parent::defaultSettings();
   }
 
@@ -125,20 +123,6 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
         '#default_value' => $this->getSetting('allow_manual'),
         '#required' => TRUE,
       ],
-      'allowed_providers' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Allowed providers'),
-        '#default_value' => $this->getSetting('allowed_providers'),
-        '#description' => $this->t('Comma separated list of allowed providers'),
-        '#required' => FALSE,
-      ],
-      'allowed_figure_ids' => [
-        '#type' => 'textfield',
-        '#title' => $this->t('Allowed figure IDs'),
-        '#default_value' => $this->getSetting('allowed_figure_ids'),
-        '#description' => $this->t('Comma separated list of allowed figure ids ("figure_id" field)'),
-        '#required' => FALSE,
-      ],
     ];
   }
 
@@ -152,14 +136,14 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
       '@allow_manual' => $this->getSetting('allow_manual'),
     ]);
 
-    $allowed_providers = $this->getSetting('allowed_providers');
+    $allowed_providers = $this->getFieldSetting('allowed_providers');
     if (!empty($allowed_providers)) {
       $summary[] = $this->t('Allowed providers: @allowed_providers', [
         '@allowed_providers' => $allowed_providers,
       ]);
     }
 
-    $allowed_figure_ids = $this->getSetting('allowed_figure_ids');
+    $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
     if (!empty($allowed_figure_ids)) {
       $summary[] = $this->t('Allowed figure IDs: @allowed_figure_ids', [
         '@allowed_figure_ids' => $allowed_figure_ids,
@@ -429,8 +413,8 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        $figures[$item['figure_id']] = $item;
-        $figures[$item['figure_id']]['figure_list'] = [];
+        $figures[$item['id']] = $item;
+        $figures[$item['id']]['figure_list'] = [];
       }
     }
 
@@ -446,7 +430,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
     // Get list of providers.
     $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
 
-    $allowed_providers = $this->getSetting('allowed_providers');
+    $allowed_providers = $this->getFieldSetting('allowed_providers');
     if (!empty($allowed_providers)) {
       $allowed_providers = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_providers))));
       $providers = array_intersect_key($providers, $allowed_providers);
@@ -561,7 +545,56 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
       '#empty_option' => $this->t('- Select -'),
       '#empty_value' => '',
     ];
+  }
 
+  /**
+   * Get figures dropdown options.
+   */
+  protected function getOptionsForFigures(array $figures, array $figure_ids) {
+    $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+    }
+
+    // Add options in order.
+    $figure_options = [];
+    foreach ($figure_ids as $figure_id) {
+      if (!$figure_id) {
+        continue;
+      }
+
+      if ($figure_id == '_all') {
+        continue;
+      }
+
+      if (empty($allowed_figure_ids)) {
+        $figure_options[$figure_id] = $figures[$figure_id]['name'];
+      }
+      else {
+        if (isset($allowed_figure_ids[$figure_id])) {
+          $figure_options[$figure_id] = $figures[$figure_id]['name'];
+        }
+      }
+
+      unset($figures[$figure_id]);
+    }
+
+    $figure_options_unselected = [];
+    foreach ($figures as $figure_id => $figure) {
+      if (empty($allowed_figure_ids)) {
+        $figure_options_unselected[$figure_id] = $figure['name'];
+      }
+      else {
+        if (isset($allowed_figure_ids[$figure['figure_id']])) {
+          $figure_options_unselected[$figure_id] = $figure['name'];
+        }
+      }
+    }
+
+    asort($figure_options_unselected);
+    $figure_options += $figure_options_unselected;
+
+    return $figure_options;
   }
 
 }

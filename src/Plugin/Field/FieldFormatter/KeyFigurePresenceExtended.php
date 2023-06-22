@@ -51,13 +51,13 @@ class KeyFigurePresenceExtended extends KeyFigureExtended {
     ];
 
     $fetch_all = FALSE;
-    $figure_names = [];
+    $selected_figures = [];
     foreach ($items as $item) {
       if ($item->getFigureId() == '_all') {
         $fetch_all = TRUE;
       }
       else {
-        $figure_names[$item->getFigureLabel()] = $item->getFigureLabel();
+        $selected_figures[$item->getFigureId()] = $item->getFigureLabel();
       }
     }
 
@@ -88,12 +88,22 @@ class KeyFigurePresenceExtended extends KeyFigureExtended {
     // If not _all, filter items.
     if (!$fetch_all) {
       $filtered_results = [];
-      foreach ($figure_names as $figure_name) {
-        if (isset($figures[$figure_name])) {
-          $filtered_results[$figure_name] = $figures[$figure_name];
+      foreach ($selected_figures as $figure_id => $figure_name) {
+        if (isset($figures[$figure_id])) {
+          $filtered_results[$figure_id] = $figures[$figure_id];
         }
       }
       $figures = $filtered_results;
+    }
+
+    $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+      foreach ($figures as $id => $figure) {
+        if (!isset($allowed_figure_ids[$figure['figure_id']])) {
+          unset($figures[$id]);
+        }
+      }
     }
 
     $figures = $this->ochaKeyFiguresApiClient->buildKeyFigures($figures, $sparklines);

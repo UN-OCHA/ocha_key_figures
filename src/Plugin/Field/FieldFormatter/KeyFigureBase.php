@@ -185,8 +185,8 @@ class KeyFigureBase extends FormatterBase {
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        $figures[$item['figure_id']] = $item;
-        $figures[$item['figure_id']]['figure_list'] = [];
+        $figures[$item['id']] = $item;
+        $figures[$item['id']]['figure_list'] = [];
       }
     }
 
@@ -221,40 +221,40 @@ class KeyFigureBase extends FormatterBase {
     $data = [];
     if (!empty($figures)) {
       foreach ($figures as $figure) {
-        if (empty($data[$figure['figure_id']])) {
-          $data[$figure['figure_id']] = $figure;
-          $data[$figure['figure_id']]['figure_list'] = [];
-          $data[$figure['figure_id']]['cache_tags'] = $this->ochaKeyFiguresApiClient->getCacheTags($figure);
+        if (empty($data[$figure['id']])) {
+          $data[$figure['id']] = $figure;
+          $data[$figure['id']]['figure_list'] = [];
+          $data[$figure['id']]['cache_tags'] = $this->ochaKeyFiguresApiClient->getCacheTags($figure);
         }
         else {
-          switch ($data[$figure['figure_id']]['value_type']) {
+          switch ($data[$figure['id']]['value_type']) {
             case 'amount':
             case 'numeric':
-              $data[$figure['figure_id']]['value'] += $figure['value'];
+              $data[$figure['id']]['value'] += $figure['value'];
               break;
 
             case 'percentage':
-              $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
+              $data[$figure['id']]['value'] = ($data[$figure['id']]['value'] + $figure['value']) / 2;
               break;
 
             case 'list':
               // Value is comnma separated list.
-              $values = explode(',', $data[$figure['figure_id']]['value']);
+              $values = explode(',', $data[$figure['id']]['value']);
               $values = array_map('trim', $values);
 
               $new_values = explode(',', $figure['value']);
               $new_values = array_map('trim', $new_values);
-              $data[$figure['figure_id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
+              $data[$figure['id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
               break;
 
             default:
               // @todo needs more logic.
-              $data[$figure['figure_id']]['value'] += $figure['value'];
+              $data[$figure['id']]['value'] += $figure['value'];
 
           }
-          $data[$figure['figure_id']]['figure_list'][] = $figure;
-          $data[$figure['figure_id']]['cache_tags'] += $this->ochaKeyFiguresApiClient->getCacheTags($figure);
-          $data[$figure['figure_id']]['cache_tags'] = array_unique($data[$figure['figure_id']]['cache_tags']);
+          $data[$figure['id']]['figure_list'][] = $figure;
+          $data[$figure['id']]['cache_tags'] += $this->ochaKeyFiguresApiClient->getCacheTags($figure);
+          $data[$figure['id']]['cache_tags'] = array_unique($data[$figure['id']]['cache_tags']);
         }
       }
 

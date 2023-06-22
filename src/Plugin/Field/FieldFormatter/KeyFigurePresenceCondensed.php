@@ -54,6 +54,16 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
       $first = $items->first();
 
       $figures = $this->getOchaPresenceFigures($first->getFigureProvider(), $first->getFigureOchaPresence(), $first->getFigureYear());
+      $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
+      if (!empty($allowed_figure_ids)) {
+        $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+        foreach ($figures as $id => $figure) {
+          if (!isset($allowed_figure_ids[$figure['figure_id']])) {
+            unset($figures[$id]);
+          }
+        }
+      }
+
       foreach ($figures as $figure) {
         // Set currency prefix if data is financial.
         if (isset($figure['value_type']) && $figure['value_type'] == 'amount') {
@@ -93,8 +103,8 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
         $value = $item->getFigureValue();
         $unit = $item->getFigureUnit();
 
-        $data = $this->ochaKeyFiguresApiClient->getOchaPresenceFigureByFigureId($item->getFigureProvider(), $item->getFigureOchaPresence(), $item->getFigureYear(), $item->getFigureId());
-        $data = reset($data);
+        $data = $this->ochaKeyFiguresApiClient->getFigure($item->getFigureProvider(), strtolower($item->getFigureId()));
+
         if (isset($data['value'], $data['value_type'])) {
           $cache_tags = $data['cache_tags'];
           unset($data['cache_tags']);

@@ -53,6 +53,17 @@ class KeyFigureCondensed extends KeyFigureBase {
       /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure $first */
       $first = $items->first();
       $figures = $this->getFigures($first->getFigureProvider(), $first->getFigureCountry(), $first->getFigureYear());
+
+      $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
+      if (!empty($allowed_figure_ids)) {
+        $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+        foreach ($figures as $id => $figure) {
+          if (!isset($allowed_figure_ids[$figure['figure_id']])) {
+            unset($figures[$id]);
+          }
+        }
+      }
+
       foreach ($figures as $figure) {
         // Set currency prefix if data is financial.
         if (isset($figure['value_type']) && $figure['value_type'] == 'amount') {
@@ -93,7 +104,8 @@ class KeyFigureCondensed extends KeyFigureBase {
         $unit = $item->getFigureUnit();
 
         if ($item->getFigureProvider() != 'manual') {
-          $data = $this->ochaKeyFiguresApiClient->query($item->getFigureProvider(), strtolower($item->getFigureId()));
+          $data = $this->ochaKeyFiguresApiClient->getFigure($item->getFigureProvider(), strtolower($item->getFigureId()));
+
           if (isset($data['value'], $data['value_type'])) {
             $value = $data['value'];
             $unit = $data['unit'] ?? '';

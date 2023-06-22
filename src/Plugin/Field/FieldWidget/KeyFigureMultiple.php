@@ -102,20 +102,7 @@ class KeyFigureMultiple extends KeyFigureBaseWidget {
             $figure_ids = array_diff_key($figure_ids, $figures);
           }
 
-          // Add options in order.
-          $figure_options = [];
-          foreach ($figure_ids as $figure_id) {
-            if ($figure_id == '_all') {
-              continue;
-            }
-
-            $figure_options[$figure_id] = $figures[$figure_id]['name'];
-            unset($figures[$figure_id]);
-          }
-
-          foreach ($figures as $figure_id => $figure) {
-            $figure_options[$figure_id] = $figure['name'];
-          }
+          $figure_options = $this->getOptionsForFigures($figures, $figure_ids);
 
           // Add an "all" option.
           $figure_options = [

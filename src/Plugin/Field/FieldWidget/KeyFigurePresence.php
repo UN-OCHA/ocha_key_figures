@@ -122,10 +122,7 @@ class KeyFigurePresence extends KeyFigureBaseWidget {
         else {
           $figure_id = isset($figures[$figure_id]) ? $figure_id : NULL;
 
-          $figure_options = array_map(function ($item) {
-            return $item['name'];
-          }, $figures);
-          asort($figure_options);
+          $figure_options = $this->getOptionsForFigures($figures, [$figure_id]);
 
           $element['id'] = [
             '#type' => 'select',

@@ -121,13 +121,13 @@ class KeyFigureExtended extends KeyFigureBase {
     ];
 
     $fetch_all = FALSE;
-    $figure_names = [];
+    $selected_figures = [];
     foreach ($items as $item) {
       if ($item->getFigureId() == '_all') {
         $fetch_all = TRUE;
       }
       else {
-        $figure_names[$item->getFigureLabel()] = $item->getFigureLabel();
+        $selected_figures[$item->getFigureId()] = $item->getFigureLabel();
       }
     }
 
@@ -161,9 +161,19 @@ class KeyFigureExtended extends KeyFigureBase {
     $filtered_results = $results;
     if (!$fetch_all) {
       $filtered_results = [];
-      foreach ($figure_names as $figure_name) {
-        if (isset($results[$figure_name])) {
-          $filtered_results[$figure_name] = $results[$figure_name];
+      foreach ($selected_figures as $figure_id => $figure_name) {
+        if (isset($results[$figure_id])) {
+          $filtered_results[$figure_id] = $results[$figure_id];
+        }
+      }
+    }
+
+    $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+      foreach ($filtered_results as $id => $figure) {
+        if (!isset($allowed_figure_ids[$figure['figure_id']])) {
+          unset($figures[$id]);
         }
       }
     }

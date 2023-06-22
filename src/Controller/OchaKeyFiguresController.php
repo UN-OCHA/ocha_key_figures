@@ -156,7 +156,7 @@ class OchaKeyFiguresController extends ControllerBase {
 
     $results = [];
     foreach ($data as $row) {
-      $results[$row['name']] = $row;
+      $results[$row['id']] = $row;
     }
 
     return $results;
@@ -181,12 +181,12 @@ class OchaKeyFiguresController extends ControllerBase {
     $results = [];
 
     foreach ($data as $row) {
-      if (!isset($results[$row['name']])) {
-        $results[$row['name']] = $row;
-        $results[$row['name']]['values'] = [];
+      if (!isset($results[$row['id']])) {
+        $results[$row['id']] = $row;
+        $results[$row['id']]['values'] = [];
       }
 
-      $results[$row['name']]['values'][] = [
+      $results[$row['id']]['values'][] = [
         'date' => $row['date'],
         'value' => $row['value'],
       ];
@@ -203,7 +203,7 @@ class OchaKeyFiguresController extends ControllerBase {
             $date_parts[2] = '01';
             $date = new \DateTime(implode('-', $date_parts));
           }
-          $results[$row['name']]['values'][] = [
+          $results[$row['id']]['values'][] = [
             'date' => $date,
             'value' => $fig['value'],
           ];
@@ -231,6 +231,13 @@ class OchaKeyFiguresController extends ControllerBase {
     // Fetch data.
     $prefix = $this->getPrefix($provider);
     return $this->getData($prefix . '/' . $path, $query, $use_cache);
+  }
+
+  public function getFigure(string $provider, string $id) : array {
+    $data = $this->query($provider, $id);
+    $data['cache_tags'] = $this->getCacheTags($data);
+
+    return $data;
   }
 
   public function getFiguresWithFigureId(string $provider, array $iso3, string $year) : array {
