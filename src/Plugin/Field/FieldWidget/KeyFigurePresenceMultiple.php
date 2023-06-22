@@ -76,7 +76,7 @@ class KeyFigurePresenceMultiple extends KeyFigureBaseWidget {
     $provider = $values['provider'] ?? NULL;
     $ochapresence = $values['ochapresence'] ?? NULL;
     $year = $values['year'] ?? NULL;
-    $figure_ids = $values['id'] ?? NULL;
+    $figure_ids = $values['id'] ?? [];
 
     $show_no_data = FALSE;
 

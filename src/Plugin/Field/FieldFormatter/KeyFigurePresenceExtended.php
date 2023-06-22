@@ -77,31 +77,20 @@ class KeyFigurePresenceExtended extends KeyFigureExtended {
       $sparklines = TRUE;
     }
 
-    // Get the data.
-    if ($sparklines) {
-      $figures = $this->getOchaPresenceFiguresGrouped($first->getFigureProvider(), $first->getFigureOchaPresence(), $first->getFigureYear());
+    // If not _all, filter items.
+    if (!$fetch_all) {
+      $figures = $this->getOchaPresenceFigures($first->getFigureProvider(), $first->getFigureOchaPresence(), $first->getFigureYear(), array_keys($selected_figures));
     }
     else {
       $figures = $this->getOchaPresenceFigures($first->getFigureProvider(), $first->getFigureOchaPresence(), $first->getFigureYear());
-    }
 
-    // If not _all, filter items.
-    if (!$fetch_all) {
-      $filtered_results = [];
-      foreach ($selected_figures as $figure_id => $figure_name) {
-        if (isset($figures[$figure_id])) {
-          $filtered_results[$figure_id] = $figures[$figure_id];
-        }
-      }
-      $figures = $filtered_results;
-    }
-
-    $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
-    if (!empty($allowed_figure_ids)) {
-      $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
-      foreach ($figures as $id => $figure) {
-        if (!isset($allowed_figure_ids[$figure['figure_id']])) {
-          unset($figures[$id]);
+      $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
+      if (!empty($allowed_figure_ids)) {
+        $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+        foreach ($figures as $id => $figure) {
+          if (!isset($allowed_figure_ids[$figure['figure_id']])) {
+            unset($figures[$id]);
+          }
         }
       }
     }

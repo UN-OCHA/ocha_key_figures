@@ -240,7 +240,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    *   Year.
    *
    * @return array
-   *   Associative array keyed by figure ID and with figures data as values.
+   *   Associative array keyed by ID and with figures data as values.
    */
   protected function getFigures($provider, $country, $year) {
     $query = [
@@ -408,18 +408,9 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    *   Associative array keyed by figure ID and with figures data as values.
    */
   protected function getOchaPresenceFigures($provider, $ocha_presence_id, $year) {
-    $data = $this->ochaKeyFiguresApiClient->getOchaPresenceFigures($provider, $ocha_presence_id, $year);
-
-    $figures = [];
-    if (!empty($data)) {
-      foreach ($data as $item) {
-        $figures[$item['id']] = $item;
-        $figures[$item['id']]['figure_list'] = [];
-      }
-    }
+    $figures = $this->ochaKeyFiguresApiClient->getOchaPresenceFiguresParsed($provider, $ocha_presence_id, $year);
 
     asort($figures);
-
     return $figures;
   }
 

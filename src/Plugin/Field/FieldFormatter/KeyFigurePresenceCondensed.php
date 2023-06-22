@@ -42,18 +42,32 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
     ];
 
     $fetch_all = FALSE;
-    foreach ($items as $delta => $item) {
+    $selected_figures = [];
+    foreach ($items as $item) {
       if ($item->getFigureId() == '_all') {
         $fetch_all = TRUE;
-        break;
+      }
+      else {
+        $selected_figures[$item->getFigureId()] = $item->getFigureLabel();
       }
     }
 
-    if ($fetch_all) {
-      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigurePresence $first */
-      $first = $items->first();
+    /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigurePresence $first */
+    $first = $items->first();
 
+
+    // Make sure we have at least 1 figure.
+    if (!$first) {
+      return [];
+    }
+
+    // If not _all, filter items.
+    if (!$fetch_all) {
+      $figures = $this->getOchaPresenceFigures($first->getFigureProvider(), $first->getFigureOchaPresence(), $first->getFigureYear(), array_keys($selected_figures));
+    }
+    else {
       $figures = $this->getOchaPresenceFigures($first->getFigureProvider(), $first->getFigureOchaPresence(), $first->getFigureYear());
+
       $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
       if (!empty($allowed_figure_ids)) {
         $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
@@ -63,81 +77,42 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
           }
         }
       }
+    }
 
-      foreach ($figures as $figure) {
-        // Set currency prefix if data is financial.
-        if (isset($figure['value_type']) && $figure['value_type'] == 'amount') {
-          $fig['prefix'] = $fig['unit'] ?? 'USD';
-          if ($currency_symbol == 'yes') {
-            $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
-          }
+    $figures = $this->ochaKeyFiguresApiClient->buildKeyFigures($figures, FALSE);
+
+    foreach ($figures as &$fig) {
+      // Set currency prefix if data is financial.
+      if (isset($fig['value_type']) && $fig['value_type'] == 'amount') {
+        $fig['prefix'] = $fig['unit'] ?? 'USD';
+        if ($currency_symbol == 'yes') {
+          $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
         }
+      }
 
-        // Set percentage suffix if needed.
-        if (isset($figure['value_type']) && $figure['value_type'] == 'percentage') {
-          $figure['unit'] = $figure['unit'] ?? '%';
-          if ($percentage_formatted != 'yes') {
-            $figure['value'] /= 100;
-          }
+      // Set percentage suffix if needed.
+      if (isset($fig['value_type']) && $fig['value_type'] == 'percentage') {
+        $fig['suffix'] = $fig['unit'] ?? '%';
+        if ($percentage_formatted != 'yes') {
+          $fig['value'] /= 100;
         }
-
-        $value = NumberFormatter::format($figure['value'], $langcode, $format, $precision, FALSE);
-        $elements['#figures'][] = [
-          '#theme' => 'ocha_key_figures_figure__' . $theme_suggestions,
-          '#label' => $figure['name'],
-          '#value' => $value,
-          '#unit' => $figure['unit'] ?? '',
-          '#country' => $figure['country'],
-          '#year' => $figure['year'],
-          '#cache' => [
-            'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
-            'tags' => $this->ochaKeyFiguresApiClient->getCacheTags($figure),
-          ],
-        ];
       }
     }
-    else {
-      /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigurePresence $item */
-      foreach ($items as $delta => $item) {
-        $label = $item->getFigureLabel();
-        $value = $item->getFigureValue();
-        $unit = $item->getFigureUnit();
 
-        $data = $this->ochaKeyFiguresApiClient->getFigure($item->getFigureProvider(), strtolower($item->getFigureId()));
-
-        if (isset($data['value'], $data['value_type'])) {
-          $cache_tags = $data['cache_tags'];
-          unset($data['cache_tags']);
-
-          $value = $data['value'];
-          $unit = $data['unit'] ?? '';
-
-          if ($data['value_type'] == 'percentage') {
-            if ($percentage_formatted == 'no') {
-              $value /= 100;
-            }
-          }
-        }
-        else {
-          $value = (string) $this->t('N/A');
-        }
-
-        if (isset($label, $value)) {
-          $value = NumberFormatter::format($value, $langcode, $format, $precision, FALSE);
-          $elements['#figures'][$delta] = [
-            '#theme' => 'ocha_key_figures_figure__' . $this->viewMode,
-            '#label' => $label,
-            '#value' => $value,
-            '#unit' => $unit,
-            '#country' => $item->getFigureOchaPresence(),
-            '#year' => $item->getFigureYear(),
-            '#cache' => [
-              'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
-              'tags' => $cache_tags,
-            ],
-          ];
-        }
-      }
+    foreach ($figures as $figure) {
+      $figure['value'] = NumberFormatter::format($figure['value'], $langcode, $format, $precision, FALSE);
+      $elements['#figures'][] = [
+        '#theme' => 'ocha_key_figures_figure__' . $theme_suggestions,
+        '#label' => $figure['name'],
+        '#value' => $figure['value'],
+        '#unit' => $figure['unit'],
+        '#country' => $figure['country'],
+        '#year' => $figure['year'],
+        '#cache' => [
+          'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
+          'tags' => $this->ochaKeyFiguresApiClient->getCacheTags($figure),
+        ],
+      ];
     }
 
     return $elements;

@@ -240,132 +240,6 @@ class OchaKeyFiguresController extends ControllerBase {
     return $data;
   }
 
-  public function getFiguresWithFigureId(string $provider, array $iso3, string $year) : array {
-    // Fetch data.
-    $prefix = $this->getPrefix($provider);
-
-    $query = [
-      'archived' => 0,
-      'iso3' => $iso3,
-      'year' => $year,
-    ];
-
-    // Special case for year.
-    if ($year == 1) {
-      // No need to filter.
-      unset($query['year']);
-    }
-    elseif ($year == 2) {
-      $query['year'] = date('Y');
-    }
-
-    $figures = $this->getData($prefix, $query);
-
-    $data = [];
-    if (!empty($figures)) {
-      foreach ($figures as $figure) {
-        if (empty($data[$figure['figure_id']])) {
-          $data[$figure['figure_id']] = $figure;
-          $data[$figure['figure_id']]['figure_list'] = [];
-          $data[$figure['figure_id']]['cache_tags'] = $this->getCacheTags($figure);
-        }
-        else {
-          switch ($data[$figure['figure_id']]['value_type']) {
-            case 'amount':
-            case 'numeric':
-              $data[$figure['figure_id']]['value'] += $figure['value'];
-              break;
-
-            case 'percentage':
-              $data[$figure['figure_id']]['value'] = ($data[$figure['figure_id']]['value'] + $figure['value']) / 2;
-              break;
-
-            case 'list':
-              // Value is comnma separated list.
-              $values = explode(',', $data[$figure['figure_id']]['value']);
-              $values = array_map('trim', $values);
-
-              $new_values = explode(',', $figure['value']);
-              $new_values = array_map('trim', $new_values);
-              $data[$figure['figure_id']]['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
-              break;
-
-            default:
-              // @todo needs more logic.
-              $data[$figure['figure_id']]['value'] += $figure['value'];
-
-          }
-          $data[$figure['figure_id']]['figure_list'][] = $figure;
-          $data[$figure['figure_id']]['cache_tags'] += $this->getCacheTags($figure);
-          $data[$figure['figure_id']]['cache_tags'] = array_unique($data[$figure['figure_id']]['cache_tags']);
-        }
-      }
-
-    }
-
-    return $data;
-  }
-
-  /**
-   * Get aggregated figure by figure id.
-   */
-  public function getFigureByFigureId(string $provider, array $iso3, string $year, string $figure_id) : array {
-    // Fetch data.
-    $prefix = $this->getPrefix($provider);
-
-    $query = [
-      'iso3' => $iso3,
-      'year' => $year,
-      'figure_id' => $figure_id,
-    ];
-
-    $figures = $this->getData($prefix, $query);
-
-    $data = [];
-    if (!empty($figures)) {
-      foreach ($figures as $figure) {
-        if (empty($data)) {
-          $data = $figure;
-          $data['figure_list'] = [];
-          $data['cache_tags'] = $this->getCacheTags($figure);
-        }
-        else {
-          switch ($data['value_type']) {
-            case 'amount':
-            case 'numeric':
-              $data['value'] += $figure['value'];
-              break;
-
-            case 'percentage':
-              $data['value'] = ($data['value'] + $figure['value']) / 2;
-              break;
-
-            case 'list':
-              // Value is comnma separated list.
-              $values = explode(',', $data['value']);
-              $values = array_map('trim', $values);
-
-              $new_values = explode(',', $figure['value']);
-              $new_values = array_map('trim', $new_values);
-              $data['value'] = implode(', ', array_unique(array_merge($values, $new_values)));
-              break;
-
-            default:
-              // @todo needs more logic.
-              $data['value'] += $figure['value'];
-
-          }
-          $data['figure_list'][] = $figure;
-          $data['cache_tags'] += $this->getCacheTags($figure);
-        }
-      }
-
-      $data['cache_tags'] = array_unique($data['cache_tags']);
-    }
-
-    return $data;
-  }
-
   /**
    * Fetch Key Figures.
    *
@@ -962,9 +836,100 @@ class OchaKeyFiguresController extends ControllerBase {
   /**
    * Get OCHA Presence figures.
    */
-  public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year) : array {
+  public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year, $figure_ids = []) : array {
     $prefix = $this->getPrefix($provider);
-    return $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures');
+
+    $query = [];
+    if (!empty($figure_ids)) {
+      $query['figure_id'] = $figure_ids;
+    }
+
+    return $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures', $query);
+  }
+
+  /**
+   * Get OCHA Presence figures.
+   */
+  public function getOchaPresenceFiguresParsed(string $provider, string $ocha_presence_id, string $year, $figure_ids = []) : array {
+    $data = $this->getOchaPresenceFigures($provider, $ocha_presence_id, $year, $figure_ids);
+
+    $figures = [];
+
+    // Build aggregated figure.
+    foreach ($data as $item) {
+      if (!isset($figures[$item['figure_id']])) {
+        $figures[$item['figure_id']] = $item;
+        $figures[$item['figure_id']]['figure_list'] = [$item];
+        $figures[$item['figure_id']]['cache_tags'] = $this->getCacheTags($item);
+      }
+      else {
+        $figures[$item['figure_id']]['figure_list'][] = $item;
+        $figures[$item['figure_id']]['cache_tags'] += $this->getCacheTags($item);
+      }
+    }
+
+    foreach ($figures as $key => $row) {
+      // We need unique tags.
+      $figures[$key]['cache_tags'] = array_unique($figures[$key]['cache_tags']);
+
+      // Make sure we have a date.
+      $figures[$key]['date'] = new \DateTime($row['year'] . '-01-01');
+      if (isset($row['updated']) && !empty($row['updated'])) {
+        $figures[$key]['date'] = new \DateTime(substr($row['updated'], 0, 10));
+      }
+
+      // Aggregated values and descriptions.
+      if (count($row['figure_list']) > 1) {
+        $values = [];
+        $descriptions = [];
+
+        foreach ($row['figure_list'] as $f) {
+          $values[] = $f['value'];
+          if (isset($f['description']) && !empty($f['description'])) {
+            $descriptions[] = $f['description'];
+          }
+        }
+
+        $new_value = $row['value'];
+        switch ($row['value_type']) {
+          case 'amount':
+          case 'numeric':
+            $new_value = 0;
+            foreach ($values as $value) {
+              $new_value += $value;
+            }
+            break;
+
+          case 'percentage':
+            $new_value = 0;
+            foreach ($values as $value) {
+              $new_value += $value;
+            }
+            $new_value = round($new_value / count($values), 2);
+            break;
+
+          case 'list':
+            $new_list = [];
+            foreach ($values as $value) {
+              $listitems = explode(',', $value);
+              $listitems = array_map('trim', $listitems);
+              $new_list = array_merge($new_list, $listitems);
+            }
+
+            $new_value = implode(', ', array_unique($new_list));
+            break;
+
+          default:
+            // @todo needs more logic.
+            $figures[$item['figure_id']]['value'] += $item['value'];
+        }
+
+        $figures[$key]['description'] = implode(', ', $descriptions);
+        $figures[$key]['value'] = $new_value;
+      }
+    }
+
+    return $figures;
   }
 
   /**
