@@ -444,26 +444,24 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    */
   protected function getDropdownForProvider($provider, $field_parents, $delta, $wrapper_id, $allow_manual = FALSE) {
     // Get list of providers.
-    $providers = [];
-
     $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
 
     $allowed_providers = $this->getSetting('allowed_providers');
     if (!empty($allowed_providers)) {
       $allowed_providers = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_providers))));
-      $supported_providers = array_intersect_key($providers, $allowed_providers);
+      $providers = array_intersect_key($providers, $allowed_providers);
     }
 
     if ($allow_manual) {
       $providers = [
         'manual' => $this->t('Manual'),
-      ] + $supported_providers;
+      ] + $providers;
     }
 
     return [
       '#type' => 'select',
       '#title' => $this->t('Provider'),
-      '#options' => $supported_providers,
+      '#options' => $providers,
       '#default_value' => $provider,
       '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
       '#empty_option' => $this->t('- Select -'),
