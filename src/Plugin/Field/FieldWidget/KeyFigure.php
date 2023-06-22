@@ -109,6 +109,8 @@ class KeyFigure extends WidgetBase {
   public static function defaultSettings() {
     return [
       'allow_manual' => 'yes',
+      'allowed_providers' => [],
+      'allowed_figure_ids' => [],
     ] + parent::defaultSettings();
   }
 
@@ -127,6 +129,20 @@ class KeyFigure extends WidgetBase {
         '#default_value' => $this->getSetting('allow_manual'),
         '#required' => TRUE,
       ],
+      'allowed_providers' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Allowed providers'),
+        '#default_value' => $this->getSetting('allowed_providers'),
+        '#description' => $this->t('Comma separated list of allowed providers'),
+        '#required' => FALSE,
+      ],
+      'allowed_figure_ids' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Allowed figure IDs'),
+        '#default_value' => $this->getSetting('allowed_figure_ids'),
+        '#description' => $this->t('Comma separated list of allowed figure ids ("figure_id" field)'),
+        '#required' => FALSE,
+      ],
     ];
   }
 
@@ -139,6 +155,20 @@ class KeyFigure extends WidgetBase {
     $summary[] = $this->t('Allow manual figures: @allow_manual', [
       '@allow_manual' => $this->getSetting('allow_manual'),
     ]);
+
+    $allowed_providers = $this->getSetting('allowed_providers');
+    if (!empty($allowed_providers)) {
+      $summary[] = $this->t('Allowed providers: @allowed_providers', [
+        '@allowed_providers' => $allowed_providers,
+      ]);
+    }
+
+    $allowed_figure_ids = $this->getSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $summary[] = $this->t('Allowed figure IDs: @allowed_figure_ids', [
+        '@allowed_figure_ids' => $allowed_figure_ids,
+      ]);
+    }
 
     return $summary;
   }
@@ -181,6 +211,12 @@ class KeyFigure extends WidgetBase {
     $field_parents = array_merge($form['#parents'], [$field_name]);
     $element_parents = array_merge($field_parents, ['widget', $delta]);
     $wrapper_id = $this->getAjaxWrapperId($field_parents, $delta);
+
+    // Ensure the field title and description are displayed when the field
+    // only accepts one value.
+    if ($this->fieldDefinition->getFieldStorageDefinition()->getCardinality() == 1) {
+      $element['#type'] = 'fieldset';
+    }
 
     $item = $items[$delta];
     $values = $form_state->getValue(array_merge($field_parents, [$delta]));
@@ -247,10 +283,10 @@ class KeyFigure extends WidgetBase {
     if ($allow_manual) {
       $providers = [
         'manual' => $this->t('Manual'),
-      ] + $this->ochaKeyFiguresApiClient->getSupportedProviders();
+      ] + $this->getSupportedProviders();
     }
     else {
-      $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
+      $providers = $this->getSupportedProviders();
     }
 
     $element['provider'] = [
@@ -388,6 +424,22 @@ class KeyFigure extends WidgetBase {
   }
 
   /**
+   * Get the list of supported providers.
+   *
+   * @return array
+   *   Associative array of providers keyed by IDs.
+   */
+  protected function getSupportedProviders() {
+    $supported_providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
+    $allowed_providers = $this->getSetting('allowed_providers');
+    if (!empty($allowed_providers)) {
+      $allowed_providers = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_providers))));
+      $supported_providers = array_intersect_key($supported_providers, $allowed_providers);
+    }
+    return $supported_providers;
+  }
+
+  /**
    * Get the contries available for the figure provider.
    *
    * @param string $provider
@@ -479,11 +531,18 @@ class KeyFigure extends WidgetBase {
       $query['year'] = date('Y');
     }
 
+    $allowed_figure_ids = $this->getSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+    }
+
     $data = $this->ochaKeyFiguresApiClient->query($provider, '', $query);
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        $figures[$item['id']] = $item;
+        if (empty($allowed_figure_ids) || isset($item['figure_id'], $allowed_figure_ids[$item['figure_id']])) {
+          $figures[$item['id']] = $item;
+        }
       }
     }
 

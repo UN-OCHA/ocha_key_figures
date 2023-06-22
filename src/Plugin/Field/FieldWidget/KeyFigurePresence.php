@@ -106,6 +106,61 @@ class KeyFigurePresence extends WidgetBase {
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings() {
+    return [
+      'allowed_providers' => [],
+      'allowed_figure_ids' => [],
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    return [
+      'allowed_providers' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Allowed providers'),
+        '#default_value' => $this->getSetting('allowed_providers'),
+        '#description' => $this->t('Comma separated list of allowed providers'),
+        '#required' => FALSE,
+      ],
+      'allowed_figure_ids' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Allowed figure IDs'),
+        '#default_value' => $this->getSetting('allowed_figure_ids'),
+        '#description' => $this->t('Comma separated list of allowed figure ids ("figure_id" field)'),
+        '#required' => FALSE,
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+
+    $allowed_providers = $this->getSetting('allowed_providers');
+    if (!empty($allowed_providers)) {
+      $summary[] = $this->t('Allowed providers: @allowed_providers', [
+        '@allowed_providers' => $allowed_providers,
+      ]);
+    }
+
+    $allowed_figure_ids = $this->getSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $summary[] = $this->t('Allowed figure IDs: @allowed_figure_ids', [
+        '@allowed_figure_ids' => $allowed_figure_ids,
+      ]);
+    }
+
+    return $summary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function handlesMultipleValues() {
     return FALSE;
   }
@@ -141,6 +196,12 @@ class KeyFigurePresence extends WidgetBase {
     $field_parents = array_merge($form['#parents'], [$field_name]);
     $element_parents = array_merge($field_parents, ['widget', $delta]);
     $wrapper_id = $this->getAjaxWrapperId($field_parents, $delta);
+
+    // Ensure the field title and description are displayed when the field
+    // only accepts one value.
+    if ($this->fieldDefinition->getFieldStorageDefinition()->getCardinality() == 1) {
+      $element['#type'] = 'fieldset';
+    }
 
     $item = $items[$delta];
     $values = $form_state->getValue(array_merge($field_parents, [$delta]));
@@ -201,7 +262,7 @@ class KeyFigurePresence extends WidgetBase {
     // Get list of providers.
     $providers = [];
 
-    $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
+    $providers = $this->getSupportedProviders();
 
     $element['provider'] = [
       '#type' => 'select',
@@ -330,8 +391,23 @@ class KeyFigurePresence extends WidgetBase {
       }
     }
 
-
     return $element;
+  }
+
+  /**
+   * Get the list of supported providers.
+   *
+   * @return array
+   *   Associative array of providers keyed by IDs.
+   */
+  protected function getSupportedProviders() {
+    $supported_providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
+    $allowed_providers = $this->getSetting('allowed_providers');
+    if (!empty($allowed_providers)) {
+      $allowed_providers = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_providers))));
+      $supported_providers = array_intersect_key($supported_providers, $allowed_providers);
+    }
+    return $supported_providers;
   }
 
   /**
@@ -341,8 +417,8 @@ class KeyFigurePresence extends WidgetBase {
    *   Provider.
    *
    * @return array
-   *   Associative array keyed by ochapresence iso3 code and with ochapresence names as
-   *   values.
+   *   Associative array keyed by ochapresence ids and with ochapresence
+   *   names as values.
    */
   protected function getFigureOchaPresences($provider) {
     return $this->ochaKeyFiguresApiClient->getOchaPresencesByProvider($provider);
@@ -353,7 +429,7 @@ class KeyFigurePresence extends WidgetBase {
    *
    * @param string $provider
    *   Provider.
-   * @param string $ochapresence
+   * @param string $ocha_presence_id
    *   OCHA Presence Id.
    *
    * @return array
@@ -379,11 +455,18 @@ class KeyFigurePresence extends WidgetBase {
   protected function getFigures($provider, $ocha_presence_id, $year) {
     $data = $this->ochaKeyFiguresApiClient->getOchaPresenceFigures($provider, $ocha_presence_id, $year);
 
+    $allowed_figure_ids = $this->getSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+    }
+
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        $figures[$item['figure_id']] = $item;
-        $figures[$item['figure_id']]['figure_list'] = [];
+        if (empty($allowed_figure_ids) || isset($item['figure_id'], $allowed_figure_ids[$item['figure_id']])) {
+          $figures[$item['figure_id']] = $item;
+          $figures[$item['figure_id']]['figure_list'] = [];
+        }
       }
     }
 
