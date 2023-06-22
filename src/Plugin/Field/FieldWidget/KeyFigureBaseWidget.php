@@ -451,7 +451,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
     $allowed_providers = $this->getSetting('allowed_providers');
     if (!empty($allowed_providers)) {
       $allowed_providers = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_providers))));
-      $supported_providers = array_intersect_key($supported_providers, $allowed_providers);
+      $supported_providers = array_intersect_key($providers, $allowed_providers);
     }
 
     if ($allow_manual) {
@@ -463,7 +463,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
     return [
       '#type' => 'select',
       '#title' => $this->t('Provider'),
-      '#options' => $providers,
+      '#options' => $supported_providers,
       '#default_value' => $provider,
       '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
       '#empty_option' => $this->t('- Select -'),

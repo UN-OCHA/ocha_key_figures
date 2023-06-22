@@ -128,9 +128,9 @@ field.formatter.settings.key_figure_presence:
       label: 'Format percentages'
 
 # Field widgets.
-field.formatter.settings.key_figure:
+field.widget.settings.key_figure:
   type: mapping
-  label: 'Key Figure formatter settings'
+  label: 'Key Figure widget settings'
   mapping:
     allow_manual:
       type: boolean
@@ -142,9 +142,9 @@ field.formatter.settings.key_figure:
       type: string
       label: 'Allowed figure IDs'
 
-field.formatter.settings.key_figure_presence:
+field.widget.settings.key_figure_presence:
   type: mapping
-  label: 'Key Figure formatter settings'
+  label: 'Key Figure widget settings'
   mapping:
     allowed_providers:
       type: string
