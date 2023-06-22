@@ -108,8 +108,8 @@ class KeyFigurePresence extends WidgetBase {
    */
   public static function defaultSettings() {
     return [
-      'allowed_providers' => [],
-      'allowed_figure_ids' => [],
+      'allowed_providers' => '',
+      'allowed_figure_ids' => '',
     ] + parent::defaultSettings();
   }
 

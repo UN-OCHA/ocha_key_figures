@@ -109,8 +109,8 @@ class KeyFigure extends WidgetBase {
   public static function defaultSettings() {
     return [
       'allow_manual' => 'yes',
-      'allowed_providers' => [],
-      'allowed_figure_ids' => [],
+      'allowed_providers' => '',
+      'allowed_figure_ids' => '',
     ] + parent::defaultSettings();
   }
 
