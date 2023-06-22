@@ -103,14 +103,43 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public static function defaultSettings() {
-    return parent::defaultSettings();
+    return [
+      'allow_manual' => 'yes',
+      'allowed_providers' => '',
+      'allowed_figure_ids' => '',
+    ] + parent::defaultSettings();
   }
 
   /**
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-    return [];
+    return [
+      'allow_manual' => [
+        '#type' => 'select',
+        '#options' => [
+          'yes' => $this->t('Yes'),
+          'no' => $this->t('No'),
+        ],
+        '#title' => $this->t('Allow manual numbers'),
+        '#default_value' => $this->getSetting('allow_manual'),
+        '#required' => TRUE,
+      ],
+      'allowed_providers' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Allowed providers'),
+        '#default_value' => $this->getSetting('allowed_providers'),
+        '#description' => $this->t('Comma separated list of allowed providers'),
+        '#required' => FALSE,
+      ],
+      'allowed_figure_ids' => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Allowed figure IDs'),
+        '#default_value' => $this->getSetting('allowed_figure_ids'),
+        '#description' => $this->t('Comma separated list of allowed figure ids ("figure_id" field)'),
+        '#required' => FALSE,
+      ],
+    ];
   }
 
   /**
@@ -118,6 +147,24 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    */
   public function settingsSummary() {
     $summary = [];
+
+    $summary[] = $this->t('Allow manual figures: @allow_manual', [
+      '@allow_manual' => $this->getSetting('allow_manual'),
+    ]);
+
+    $allowed_providers = $this->getSetting('allowed_providers');
+    if (!empty($allowed_providers)) {
+      $summary[] = $this->t('Allowed providers: @allowed_providers', [
+        '@allowed_providers' => $allowed_providers,
+      ]);
+    }
+
+    $allowed_figure_ids = $this->getSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_ids)) {
+      $summary[] = $this->t('Allowed figure IDs: @allowed_figure_ids', [
+        '@allowed_figure_ids' => $allowed_figure_ids,
+      ]);
+    }
 
     return $summary;
   }
@@ -399,13 +446,18 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
     // Get list of providers.
     $providers = [];
 
+    $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
+
+    $allowed_providers = $this->getSetting('allowed_providers');
+    if (!empty($allowed_providers)) {
+      $allowed_providers = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_providers))));
+      $supported_providers = array_intersect_key($supported_providers, $allowed_providers);
+    }
+
     if ($allow_manual) {
       $providers = [
         'manual' => $this->t('Manual'),
-      ] + $this->ochaKeyFiguresApiClient->getSupportedProviders();
-    }
-    else {
-      $providers = $this->ochaKeyFiguresApiClient->getSupportedProviders();
+      ] + $supported_providers;
     }
 
     return [

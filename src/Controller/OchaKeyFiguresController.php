@@ -963,7 +963,7 @@ class OchaKeyFiguresController extends ControllerBase {
   /**
    * Get figure by figure id.
    */
-  public function getgetOchaPresenceFigureByFigureId(string $provider, string $ocha_presence_id, string $year, string $figure_id) : array {
+  public function getOchaPresenceFigureByFigureId(string $provider, string $ocha_presence_id, string $year, string $figure_id) : array {
     $prefix = $this->getPrefix($provider);
     if ($year == 2) {
       $year = date('Y');

@@ -36,6 +36,12 @@ class KeyFigurePresence extends KeyFigureBaseWidget {
     $element_parents = array_merge($field_parents, ['widget', $delta]);
     $wrapper_id = $this->getAjaxWrapperId($field_parents, $delta);
 
+    // Ensure the field title and description are displayed when the field
+    // only accepts one value.
+    if ($this->fieldDefinition->getFieldStorageDefinition()->getCardinality() == 1) {
+      $element['#type'] = 'fieldset';
+    }
+
     $item = $items[$delta];
     $values = $form_state->getValue(array_merge($field_parents, [$delta]));
 
@@ -170,7 +176,6 @@ class KeyFigurePresence extends KeyFigureBaseWidget {
         ];
       }
     }
-
 
     return $element;
   }

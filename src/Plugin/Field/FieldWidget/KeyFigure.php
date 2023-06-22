@@ -19,6 +19,82 @@ use Drupal\Core\Form\FormStateInterface;
  * )
  */
 class KeyFigure extends KeyFigureBaseWidget {
+=======
+class KeyFigure extends WidgetBase {
+
+  /**
+   * The logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * The renderer service.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
+   * The OCHA Key Figures API client.
+   *
+   * @var \Drupal\ocha_key_figures\Controller\OchaKeyFiguresController
+   */
+  protected $ochaKeyFiguresApiClient;
+
+  /**
+   * Ajax wrapper ID.
+   *
+   * @var string
+   */
+  protected $ajaxWrapperId;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(
+    $plugin_id,
+    $plugin_definition,
+    FieldDefinitionInterface $field_definition,
+    array $settings,
+    array $third_party_settings,
+    LoggerChannelFactoryInterface $logger_factory,
+    RendererInterface $renderer,
+    OchaKeyFiguresController $ocha_key_figure_api_client
+  ) {
+    parent::__construct(
+      $plugin_id,
+      $plugin_definition,
+      $field_definition,
+      $settings,
+      $third_party_settings
+    );
+    $this->logger = $logger_factory->get('unocha_figure_widget');
+    $this->renderer = $renderer;
+    $this->ochaKeyFiguresApiClient = $ocha_key_figure_api_client;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition
+  ) {
+    return new static(
+      $plugin_id,
+      $plugin_definition,
+      $configuration['field_definition'],
+      $configuration['settings'],
+      $configuration['third_party_settings'],
+      $container->get('logger.factory'),
+      $container->get('renderer'),
+      $container->get('ocha_key_figures.key_figures_controller')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -35,6 +111,12 @@ class KeyFigure extends KeyFigureBaseWidget {
     $field_parents = array_merge($form['#parents'], [$field_name]);
     $element_parents = array_merge($field_parents, ['widget', $delta]);
     $wrapper_id = $this->getAjaxWrapperId($field_parents, $delta);
+
+    // Ensure the field title and description are displayed when the field
+    // only accepts one value.
+    if ($this->fieldDefinition->getFieldStorageDefinition()->getCardinality() == 1) {
+      $element['#type'] = 'fieldset';
+    }
 
     $item = $items[$delta];
     $values = $form_state->getValue(array_merge($field_parents, [$delta]));

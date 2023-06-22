@@ -17,3 +17,138 @@ ocha_key_figures.settings:
     max_age:
       type: integer
       label: 'Max age for cache'
+
+# Field types.
+field.field_settings.key_figure:
+  type: mapping
+  mapping:
+    label:
+      type: string
+      label: 'Figure label'
+    value:
+      type: string
+      label: 'Figure value'
+    unit:
+      type: string
+      label: 'Figure unit'
+    provider:
+      type: string
+      label: 'Figure provider'
+    id:
+      type: string
+      label: 'Figure ID'
+    country:
+      type: string
+      label: 'Figure country'
+    year:
+      type: integer
+      label: 'Figure year'
+
+field.field_settings.key_figure_presence:
+  type: mapping
+  mapping:
+    label:
+      type: string
+      label: 'Figure label'
+    value:
+      type: string
+      label: 'Figure value'
+    unit:
+      type: string
+      label: 'Figure unit'
+    provider:
+      type: string
+      label: 'Figure provider'
+    id:
+      type: string
+      label: 'Figure ID'
+    ochapresence:
+      type: string
+      label: 'Figure ocha presence'
+    year:
+      type: integer
+      label: 'Figure year'
+
+# Field formatters.
+field.formatter.settings.key_figure:
+  type: mapping
+  label: 'Key Figure formatter settings'
+  mapping:
+    format:
+      type: string
+      label: 'Number format'
+    precision:
+      type: integer
+      label: 'Number of digits after the decimal'
+    percentage:
+      type: boolean
+      label: 'Use currency symbol'
+    currency_symbol:
+      type: boolean
+      label: 'Format percentages'
+
+field.formatter.settings.key_figure_extended:
+  type: mapping
+  label: 'Key Figure formatter settings'
+  mapping:
+    format:
+      type: string
+      label: 'Number format'
+    precision:
+      type: integer
+      label: 'Number of digits after the decimal'
+    percentage:
+      type: boolean
+      label: 'Use currency symbol'
+    currency_symbol:
+      type: boolean
+      label: 'Format percentages'
+    display_sparklines:
+      type: boolean
+      label: 'Display sparklines'
+    output_json_ld:
+      type: boolean
+      label: 'Output Json Ld'
+
+field.formatter.settings.key_figure_presence:
+  type: mapping
+  label: 'Key Figure formatter settings'
+  mapping:
+    format:
+      type: string
+      label: 'Number format'
+    precision:
+      type: integer
+      label: 'Number of digits after the decimal'
+    percentage:
+      type: boolean
+      label: 'Use currency symbol'
+    currency_symbol:
+      type: boolean
+      label: 'Format percentages'
+
+# Field widgets.
+field.formatter.settings.key_figure:
+  type: mapping
+  label: 'Key Figure formatter settings'
+  mapping:
+    allow_manual:
+      type: boolean
+      label: 'Allow manual numbers'
+    allowed_providers:
+      type: string
+      label: 'Allowed providers'
+    allowed_figure_ids:
+      type: string
+      label: 'Allowed figure IDs'
+
+field.formatter.settings.key_figure_presence:
+  type: mapping
+  label: 'Key Figure formatter settings'
+  mapping:
+    allowed_providers:
+      type: string
+      label: 'Allowed providers'
+    allowed_figure_ids:
+      type: string
+      label: 'Allowed figure IDs'
