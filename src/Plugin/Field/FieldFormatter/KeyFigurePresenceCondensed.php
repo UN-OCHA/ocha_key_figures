@@ -99,7 +99,7 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
         $value = $item->getFigureValue();
         $unit = $item->getFigureUnit();
 
-        $data = $this->ochaKeyFiguresApiClient->getgetOchaPresenceFigureByFigureId($item->getFigureProvider(), $item->getFigureOchaPresence(), $item->getFigureYear(), $item->getFigureId());
+        $data = $this->ochaKeyFiguresApiClient->getOchaPresenceFigureByFigureId($item->getFigureProvider(), $item->getFigureOchaPresence(), $item->getFigureYear(), $item->getFigureId());
         $data = reset($data);
         if (isset($data['value'], $data['value_type'])) {
           $cache_tags = $data['cache_tags'];
