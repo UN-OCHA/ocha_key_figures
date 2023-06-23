@@ -117,6 +117,9 @@ class KeyFigureBase extends FormatterBase {
     $summary[] = $this->t('Precision: @value', [
       '@value' => $this->getSetting('precision') ?? 1,
     ]);
+    $summary[] = $this->t('Output currency symbol: @value', [
+      '@value' => $this->getSetting('currency_symbol') ?? 'yes',
+    ]);
     $summary[] = $this->t('Output style percentages: @value', [
       '@value' => $this->getSetting('percentage') ?? 'yes',
     ]);
