@@ -928,7 +928,7 @@ class OchaKeyFiguresController extends ControllerBase {
             $figures[$item['figure_id']]['value'] += $item['value'];
         }
 
-        $figures[$key]['description'] = implode(', ', $descriptions);
+        $figures[$key]['description'] = implode(', ', array_unique($descriptions));
         $figures[$key]['value'] = $new_value;
       }
     }
