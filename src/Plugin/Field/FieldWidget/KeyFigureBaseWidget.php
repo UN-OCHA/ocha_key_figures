@@ -530,9 +530,10 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    * Get figures dropdown options.
    */
   protected function getOptionsForFigures(array $figures, array $figure_ids) {
-    $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
-    if (!empty($allowed_figure_ids)) {
-      $allowed_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_ids))));
+    // Array of "Figure Ids" not Ids.
+    $allowed_figure_figure_ids = $this->getFieldSetting('allowed_figure_ids');
+    if (!empty($allowed_figure_figure_ids)) {
+      $allowed_figure_figure_ids = array_flip(preg_split('/,\s*/', trim(strtolower($allowed_figure_figure_ids))));
     }
 
     // Add options in order.
@@ -546,11 +547,11 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
         continue;
       }
 
-      if (empty($allowed_figure_ids)) {
+      if (empty($allowed_figure_figure_ids)) {
         $figure_options[$figure_id] = $figures[$figure_id]['name'];
       }
       else {
-        if (isset($allowed_figure_ids[$figure_id])) {
+        if (isset($allowed_figure_figure_ids[$figures[$figure_id]['figure_id']])) {
           $figure_options[$figure_id] = $figures[$figure_id]['name'];
         }
       }
@@ -560,11 +561,11 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
 
     $figure_options_unselected = [];
     foreach ($figures as $figure_id => $figure) {
-      if (empty($allowed_figure_ids)) {
+      if (empty($allowed_figure_figure_ids)) {
         $figure_options_unselected[$figure_id] = $figure['name'];
       }
       else {
-        if (isset($allowed_figure_ids[$figure['figure_id']])) {
+        if (isset($allowed_figure_figure_ids[$figure['figure_id']])) {
           $figure_options_unselected[$figure_id] = $figure['name'];
         }
       }
