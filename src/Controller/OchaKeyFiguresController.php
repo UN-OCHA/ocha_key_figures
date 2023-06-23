@@ -665,6 +665,10 @@ class OchaKeyFiguresController extends ControllerBase {
    * Get cache tags
    */
   public function getCacheTags(array $figure) {
+    if (!isset($figure['provider'])) {
+      return [];
+    }
+
     return [
       $this->cacheId,
       $this->cacheId . ':' . $this->getPrefix($figure['provider']),

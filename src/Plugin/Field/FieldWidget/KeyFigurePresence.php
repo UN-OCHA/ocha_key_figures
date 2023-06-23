@@ -7,11 +7,11 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Plugin implementation of the 'key_figure' widget.
+ * Plugin implementation of the 'key_figure_presence' widget.
  *
  * @FieldWidget(
  *   id = "key_figure_presence",
- *   label = @Translation("Key Figure - Simple"),
+ *   label = @Translation("Key Figure Presence - Simple"),
  *   field_types = {
  *     "key_figure_presence"
  *   },

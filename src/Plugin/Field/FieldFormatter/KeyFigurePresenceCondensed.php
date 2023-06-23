@@ -3,7 +3,6 @@
 namespace Drupal\ocha_key_figures\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\ocha_key_figures\Helpers\NumberFormatter;
 
 /**
  * Plugin implementation of the 'key_figure' formatter.
@@ -22,11 +21,6 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $format = $this->getSetting('format');
-    $precision = $this->getSetting('precision');
-    $percentage_formatted = $this->getSetting('percentage');
-    $currency_symbol = $this->getSetting('currency_symbol');
-
     $theme_suggestions = implode('__', [
       $this->viewMode,
       $items->getEntity()->getEntityTypeId(),
@@ -82,25 +76,11 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
     $figures = $this->ochaKeyFiguresApiClient->buildKeyFigures($figures, FALSE);
 
     foreach ($figures as &$fig) {
-      // Set currency prefix if data is financial.
-      if (isset($fig['value_type']) && $fig['value_type'] == 'amount') {
-        $fig['prefix'] = $fig['unit'] ?? 'USD';
-        if ($currency_symbol == 'yes') {
-          $fig['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $fig['prefix']);
-        }
-      }
-
-      // Set percentage suffix if needed.
-      if (isset($fig['value_type']) && $fig['value_type'] == 'percentage') {
-        $fig['suffix'] = $fig['unit'] ?? '%';
-        if ($percentage_formatted != 'yes') {
-          $fig['value'] /= 100;
-        }
-      }
+      $this->addPrefixSuffix($fig, $langcode);
     }
 
     foreach ($figures as $figure) {
-      $figure['value'] = NumberFormatter::format($figure['value'], $langcode, $format, $precision, FALSE);
+      $figure['value'] = $this->formatNumber($figure['value'], $langcode);
       $elements['#figures'][] = [
         '#theme' => 'ocha_key_figures_figure__' . $theme_suggestions,
         '#label' => $figure['name'],

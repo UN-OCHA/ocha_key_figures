@@ -101,7 +101,7 @@ class KeyFigure extends KeyFigureBaseWidget {
     $element['#prefix'] = '<div id="' . $wrapper_id . '">';
     $element['#suffix'] = '</div>';
 
-    $element['provider'] = $this->getDropdownForProvider($provider, $field_parents, $delta, $wrapper_id, TRUE);
+    $element['provider'] = $this->getDropdownForProvider($provider, $field_parents, $delta, $wrapper_id, $allow_manual);
 
     // Extra fields to select the data from a provider.
     if (isset($provider) && !empty($provider) && !$manual) {

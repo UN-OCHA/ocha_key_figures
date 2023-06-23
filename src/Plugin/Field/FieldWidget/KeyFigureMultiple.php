@@ -7,7 +7,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Plugin implementation of the 'key_figure' widget.
+ * Plugin implementation of the 'key_figure_multiple' widget.
  *
  * @FieldWidget(
  *   id = "key_figure_multiple",

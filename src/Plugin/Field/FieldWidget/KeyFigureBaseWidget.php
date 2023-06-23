@@ -22,6 +22,8 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
 
   /**
    * Separator used by PHP and js.
+   *
+   * @var string
    */
   protected $separator = '|-|';
 
@@ -135,20 +137,6 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
     $summary[] = $this->t('Allow manual figures: @allow_manual', [
       '@allow_manual' => $this->getSetting('allow_manual'),
     ]);
-
-    $allowed_providers = $this->getFieldSetting('allowed_providers');
-    if (!empty($allowed_providers)) {
-      $summary[] = $this->t('Allowed providers: @allowed_providers', [
-        '@allowed_providers' => $allowed_providers,
-      ]);
-    }
-
-    $allowed_figure_ids = $this->getFieldSetting('allowed_figure_ids');
-    if (!empty($allowed_figure_ids)) {
-      $summary[] = $this->t('Allowed figure IDs: @allowed_figure_ids', [
-        '@allowed_figure_ids' => $allowed_figure_ids,
-      ]);
-    }
 
     return $summary;
   }
@@ -384,7 +372,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    *
    * @param string $provider
    *   Provider.
-   * @param string $ochapresence
+   * @param string $ocha_presence_id
    *   OCHA Presence Id.
    *
    * @return array
@@ -482,7 +470,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
       '#title' => $this->t('Year'),
       '#options' => $years,
       '#default_value' => $year,
-      '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, '', $wrapper_id),
+      '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
       '#empty_option' => $this->t('- Select -'),
       '#empty_value' => '',
     ];
@@ -496,7 +484,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
 
     return [
       '#type' => 'select',
-      '#title' => $this->t('ochapresence'),
+      '#title' => $this->t('OCHA regional or country office'),
       '#options' => $ochapresences,
       '#default_value' => $ochapresence,
       '#ajax' => $this->getAjaxSettings($this->t('Loading figure data...'), $field_parents, $delta, $wrapper_id),
@@ -510,7 +498,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    *
    * @param string $provider
    *   Provider.
-   * @param string $ochapresence
+   * @param string $ocha_presence_id
    *   OCHA Presence Id.
    *
    * @return array
