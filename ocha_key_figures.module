@@ -46,6 +46,8 @@ function ocha_key_figures_theme($existing, $type, $theme, $path) {
         'unit' => NULL,
         'country' => NULL,
         'year' => NULL,
+        'prefix' => NULL,
+        'suffix' => NULL,
       ],
     ],
   ];
