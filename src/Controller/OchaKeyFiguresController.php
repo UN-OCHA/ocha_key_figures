@@ -234,7 +234,7 @@ class OchaKeyFiguresController extends ControllerBase {
   }
 
   public function getFigure(string $provider, string $id) : array {
-    $data = $this->query($provider, $id);
+    $data = $this->query($provider, strtolower($id));
     $data['cache_tags'] = $this->getCacheTags($data);
 
     return $data;
@@ -785,14 +785,14 @@ class OchaKeyFiguresController extends ControllerBase {
    * Get OCHA Presence.
    */
   public function getOchaPresence(string $id) : array {
-    return $this->getData('ocha_presences/' . $id);
+    return $this->getData('ocha_presences/' . strtolower($id));
   }
 
   /**
    * Delete OCHA Presence.
    */
   public function deleteOchaPresence(string $id) : void {
-    $this->setData('ocha_presences/' . $id, [], 'DELETE');
+    $this->setData('ocha_presences/' . strtolower($id), [], 'DELETE');
   }
 
   /**
@@ -803,7 +803,7 @@ class OchaKeyFiguresController extends ControllerBase {
       return $this->setData('ocha_presences', $data, 'POST');
     }
     else {
-      return $this->setData('ocha_presences/' . $id, $data);
+      return $this->setData('ocha_presences/' . strtolower($id), $data);
     }
   }
 
@@ -811,14 +811,14 @@ class OchaKeyFiguresController extends ControllerBase {
    * Get OCHA Presence.
    */
   public function getOchaPresenceExternal(string $id) : array {
-    return $this->getData('ocha_presence_external_ids/' . $id);
+    return $this->getData('ocha_presence_external_ids/' . strtolower($id));
   }
 
   /**
    * Delete OCHA Presence.
    */
   public function deleteOchaPresenceExternal(string $id) : void {
-    $this->setData('ocha_presence_external_ids/' . $id, [], 'DELETE');
+    $this->setData('ocha_presence_external_ids/' . strtolower($id), [], 'DELETE');
   }
 
   /**
@@ -829,7 +829,7 @@ class OchaKeyFiguresController extends ControllerBase {
       return $this->setData('ocha_presence_external_ids', $data, 'POST');
     }
     else {
-      return $this->setData('ocha_presence_external_ids/' . $id, $data);
+      return $this->setData('ocha_presence_external_ids/' . strtolower($id), $data);
     }
   }
 
