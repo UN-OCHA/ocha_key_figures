@@ -5,17 +5,17 @@ namespace Drupal\ocha_key_figures\Plugin\Field\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 
 /**
- * Plugin implementation of the 'key_figure' formatter.
+ * Plugin implementation of the 'key_figure_presence_extended' formatter.
  *
  * @FieldFormatter(
- *   id = "key_figure_presence",
- *   label = @Translation("Key Figure - Condensed"),
+ *   id = "key_figure_presence_extended",
+ *   label = @Translation("Key Figure - Extended"),
  *   field_types = {
  *     "key_figure_presence"
  *   }
  * )
  */
-class KeyFigurePresenceCondensed extends KeyFigureBase {
+class KeyFigurePresenceExtended extends KeyFigureExtended {
 
   /**
    * {@inheritdoc}
@@ -28,8 +28,14 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
       $items->getFieldDefinition()->getName(),
     ]);
 
+    $view_all = '';
+    $view_all_info = '';
+
     $elements = [
-      '#theme' => 'ocha_key_figures_figure_list__' . $theme_suggestions,
+      '#theme' => 'ocha_key_figures_extended_figure_list__' . $theme_suggestions,
+      '#view_all' => $view_all,
+      '#view_all_info' => $view_all_info,
+      '#weight' => 99,
       '#cache' => [
         'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
       ],
@@ -49,10 +55,17 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
     /** @var \Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigurePresence $first */
     $first = $items->first();
 
-
     // Make sure we have at least 1 figure.
     if (!$first) {
       return [];
+    }
+
+    $sparklines = FALSE;
+    if ($this->getSetting('display_sparklines') == 'all') {
+      $sparklines = TRUE;
+    }
+    elseif ($this->getSetting('display_sparklines') == 'single') {
+      $sparklines = TRUE;
     }
 
     // If not _all, filter items.
@@ -73,23 +86,21 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
       }
     }
 
-    $figures = $this->ochaKeyFiguresApiClient->buildKeyFigures($figures, FALSE);
+    $figures = $this->ochaKeyFiguresApiClient->buildKeyFigures($figures, $sparklines);
 
     foreach ($figures as &$fig) {
       $this->addPrefixSuffix($fig, $langcode);
     }
 
+    if ($this->getSetting('output_json_ld') == 'yes') {
+      $elements['#jsonld'] = $this->buildJsonLd($figures, $first);
+    }
+
     foreach ($figures as $figure) {
       $figure['value'] = $this->formatNumber($figure['value'], $langcode);
       $elements['#figures'][] = [
-        '#theme' => 'ocha_key_figures_figure__' . $theme_suggestions,
-        '#label' => $figure['name'],
-        '#value' => $figure['value'],
-        '#unit' => $figure['unit'],
-        '#country' => $figure['country'],
-        '#year' => $figure['year'],
-        '#value_prefix' => $figure['prefix'] ?? '',
-        '#value_suffix' => $figure['suffix'] ?? '',
+        '#theme' => 'ocha_key_figures_extended_figure__' . $theme_suggestions,
+        '#figure' => $figure,
         '#cache' => [
           'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
           'tags' => $this->ochaKeyFiguresApiClient->getCacheTags($figure),

@@ -17,3 +17,140 @@ ocha_key_figures.settings:
     max_age:
       type: integer
       label: 'Max age for cache'
+
+# Field types.
+field.field_settings.key_figure:
+  type: mapping
+  label: 'Key Figure field settings'
+  mapping:
+    allowed_providers:
+      type: string
+      label: 'Allowed providers'
+    allowed_figure_ids:
+      type: string
+      label: 'Allowed figure IDs'
+
+field.field_settings.key_figure_presence:
+  type: mapping
+  label: 'Key Figure Presence field settings'
+  mapping:
+    allowed_providers:
+      type: string
+      label: 'Allowed providers'
+    allowed_figure_ids:
+      type: string
+      label: 'Allowed figure IDs'
+
+# Field formatters.
+field.formatter.settings.key_figure:
+  type: mapping
+  label: 'Key Figure formatter settings'
+  mapping:
+    format:
+      type: string
+      label: 'Number format'
+    precision:
+      type: integer
+      label: 'Number of digits after the decimal'
+    percentage:
+      type: string
+      label: 'Use currency symbol'
+    currency_symbol:
+      type: string
+      label: 'Format percentages'
+
+field.formatter.settings.key_figure_extended:
+  type: mapping
+  label: 'Key Figure Extended formatter settings'
+  mapping:
+    format:
+      type: string
+      label: 'Number format'
+    precision:
+      type: integer
+      label: 'Number of digits after the decimal'
+    percentage:
+      type: string
+      label: 'Use currency symbol'
+    currency_symbol:
+      type: string
+      label: 'Format percentages'
+    display_sparklines:
+      type: string
+      label: 'Display sparklines'
+    output_json_ld:
+      type: string
+      label: 'Output Json Ld'
+
+field.formatter.settings.key_figure_presence:
+  type: mapping
+  label: 'Key Figure Presence ormatter settings'
+  mapping:
+    format:
+      type: string
+      label: 'Number format'
+    precision:
+      type: integer
+      label: 'Number of digits after the decimal'
+    percentage:
+      type: string
+      label: 'Use currency symbol'
+    currency_symbol:
+      type: string
+      label: 'Format percentages'
+
+field.formatter.settings.key_figure_presence_extended:
+  type: mapping
+  label: 'Key Figure Presence Extended formatter settings'
+  mapping:
+    format:
+      type: string
+      label: 'Number format'
+    precision:
+      type: integer
+      label: 'Number of digits after the decimal'
+    percentage:
+      type: string
+      label: 'Use currency symbol'
+    currency_symbol:
+      type: string
+      label: 'Format percentages'
+    display_sparklines:
+      type: string
+      label: 'Display sparklines'
+    output_json_ld:
+      type: string
+      label: 'Output Json Ld'
+
+# Field widgets.
+field.widget.settings.key_figure:
+  type: mapping
+  label: 'Key Figure widget settings'
+  mapping:
+    allow_manual:
+      type: string
+      label: 'Allow manual numbers'
+
+field.widget.settings.key_figure_multiple:
+  type: mapping
+  label: 'Key Figure Multiple widget settings'
+  mapping:
+    allow_manual:
+      type: string
+      label: 'Allow manual numbers'
+
+field.widget.settings.key_figure_presence:
+  type: mapping
+  label: 'Key Figure Presence widget settings'
+  mapping:
+    allow_manual:
+      type: string
+      label: 'Allow manual numbers'
+
+field.widget.settings.key_figure_presence_multiple:
+  type: mapping
+  label: 'Key Figure Presence Mulitple widget settings'
+  mapping:
+    allow_manual:
+      type: string
+      label: 'Allow manual numbers'

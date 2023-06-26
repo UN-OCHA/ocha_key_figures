@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Random;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
@@ -29,6 +30,41 @@ class KeyFigure extends FieldItemBase {
    * @var \Drupal\Core\Config\ImmutableConfig
    */
   protected $config;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function defaultFieldSettings() {
+    return [
+      'allowed_providers' => '',
+      'allowed_figure_ids' => '',
+    ] + parent::defaultFieldSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
+    $element = parent::fieldSettingsForm($form, $form_state);
+
+    $element['allowed_providers'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Allowed providers'),
+      '#default_value' => $this->getSetting('allowed_providers'),
+      '#description' => $this->t('Comma separated list of allowed providers'),
+      '#required' => FALSE,
+    ];
+
+    $element['allowed_figure_ids'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Allowed figure IDs'),
+      '#default_value' => $this->getSetting('allowed_figure_ids'),
+      '#description' => $this->t('Comma separated list of allowed figure ids ("figure_id" field)'),
+      '#required' => FALSE,
+    ];
+
+    return $element;
+  }
 
   /**
    * {@inheritdoc}
