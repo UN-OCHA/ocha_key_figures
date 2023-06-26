@@ -69,8 +69,8 @@ class KeyFigureCondensed extends KeyFigureBase {
           '#unit' => $figure['unit'] ?? '',
           '#country' => $figure['country'],
           '#year' => $figure['year'],
-          '#prefix' => $figure['prefix'] ?? '',
-          '#suffix' => $figure['suffix'] ?? '',
+          '#value_prefix' => $figure['prefix'] ?? '',
+          '#value_suffix' => $figure['suffix'] ?? '',
           '#cache' => [
             'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
             'tags' => $this->ochaKeyFiguresApiClient->getCacheTags($figure),
@@ -108,8 +108,8 @@ class KeyFigureCondensed extends KeyFigureBase {
             '#unit' => $unit,
             '#country' => $item->getFigureCountry(),
             '#year' => $item->getFigureYear(),
-            '#prefix' => $data['prefix'] ?? '',
-            '#suffix' => $data['suffix'] ?? '',
+            '#value_prefix' => $data['prefix'] ?? '',
+            '#value_suffix' => $data['suffix'] ?? '',
             '#cache' => [
               'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
               'tags' => $this->ochaKeyFiguresApiClient->getCacheTagsForFigure($item),

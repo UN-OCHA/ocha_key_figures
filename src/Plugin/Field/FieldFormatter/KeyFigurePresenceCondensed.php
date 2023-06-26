@@ -88,8 +88,8 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
         '#unit' => $figure['unit'],
         '#country' => $figure['country'],
         '#year' => $figure['year'],
-        '#prefix' => $figure['prefix'] ?? '',
-        '#suffix' => $figure['suffix'] ?? '',
+        '#value_prefix' => $figure['prefix'] ?? '',
+        '#value_suffix' => $figure['suffix'] ?? '',
         '#cache' => [
           'max-age' => $this->ochaKeyFiguresApiClient->getMaxAge(),
           'tags' => $this->ochaKeyFiguresApiClient->getCacheTags($figure),
