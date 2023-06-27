@@ -201,6 +201,9 @@ class OchaKeyFiguresController extends ControllerBase {
             $date_parts = explode('-', substr($fig['date'], 0, 10));
             // Change day to 1.
             $date_parts[2] = '01';
+            if ($date_parts[1] > 12) {
+              $date_parts[1] = 12;
+            }
             $date = new \DateTime(implode('-', $date_parts));
           }
           $results[$row['id']]['values'][] = [
