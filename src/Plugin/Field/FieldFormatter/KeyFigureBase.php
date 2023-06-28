@@ -178,6 +178,8 @@ class KeyFigureBase extends FormatterBase {
    *   ISO3 code of a ocha_presence_id.
    * @param string $year
    *   Year.
+   * @param array $figure_ids
+   *   List of figure IDs.
    *
    * @return array
    *   Associative array keyed by figure ID and with figures data as values.
@@ -198,7 +200,7 @@ class KeyFigureBase extends FormatterBase {
 
     // Set currency prefix if data is financial.
     if (isset($figure['value_type']) && $figure['value_type'] == 'amount') {
-      $figure['prefix'] = $figure['unit'] ?? 'USD';
+      $figure['prefix'] = !empty($figure['unit']) ? $figure['unit'] : 'USD';
       if ($currency_symbol == 'yes') {
         $figure['prefix'] = NumberFormatter::getCurrencySymbol($langcode, $figure['prefix']);
       }
@@ -206,7 +208,7 @@ class KeyFigureBase extends FormatterBase {
 
     // Set percentage suffix if needed.
     if (isset($figure['value_type']) && $figure['value_type'] == 'percentage') {
-      $figure['unit'] = $figure['unit'] ?? '%';
+      $figure['unit'] = !empty($figure['unit']) ? $figure['unit'] : '%';
       if ($percentage_formatted != 'yes') {
         $figure['value'] /= 100;
       }
@@ -225,7 +227,7 @@ class KeyFigureBase extends FormatterBase {
   }
 
   /**
-   * Build json-ld output
+   * Build json-ld output.
    */
   protected function buildJsonLd($data, $item) {
     if (empty($data)) {
@@ -239,11 +241,11 @@ class KeyFigureBase extends FormatterBase {
       $country = $row['country'] ?? '';
     }
 
-    $name = t('@title of @country', [
+    $name = $this->t('@title of @country', [
       '@title' => 'Key figures',
       '@country' => $country,
     ]);
-    $description = t('Easily discoverable topline numbers for humanitarian crises in @country', [
+    $description = $this->t('Easily discoverable topline numbers for humanitarian crises in @country', [
       '@country' => $country,
     ]);
 
