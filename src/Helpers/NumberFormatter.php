@@ -243,13 +243,21 @@ class NumberFormatter {
    * @param string $langcode
    *   Language code.
    * @param string $currency_code
-   *   3-letter currency code.
+   *   A 3-letter currency code.
    *
    * @return string
    *   The currency symbol
    */
   public static function getCurrencySymbol(string $langcode, string $currency_code) : string {
-    return Currencies::getSymbol($currency_code, $langcode);
+    if (empty($currency_code)) {
+      return '';
+    }
+    try {
+      return Currencies::getSymbol($currency_code, $langcode);
+    }
+    catch (\Exception $exception) {
+      return $currency_code;
+    }
   }
 
   /**
