@@ -396,6 +396,11 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
    *   Associative array keyed by figure ID and with figures data as values.
    */
   protected function getOchaPresenceFigures($provider, $ocha_presence_id, $year) {
+    // Special case for year.
+    if ($year == 2) {
+      $year = date('Y');
+    }
+
     $figures = $this->ochaKeyFiguresApiClient->getOchaPresenceFiguresParsed($provider, $ocha_presence_id, $year);
 
     asort($figures);
