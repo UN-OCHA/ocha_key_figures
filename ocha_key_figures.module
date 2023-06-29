@@ -94,14 +94,14 @@ function ocha_key_figures_theme_suggestions_ocha_key_figures_extended_figure(arr
     return [];
   }
 
+  $new = 'ocha_key_figures_extended_figure__' . str_replace('-', '_', $variables['figure']['figure_id']);
   $suggestions = [
-    'ocha_key_figures_extended_figure__' . $variables['figure']['figure_id'],
+    $new,
   ];
 
   $parts = explode('__', $variables['theme_hook_original']);
   array_shift($parts);
 
-  $new = 'ocha_key_figures_extended_figure__' . $variables['figure']['figure_id'];
   foreach ($parts as $part) {
     $new .= '__' . $part;
     $suggestions[] = $new;
@@ -122,14 +122,14 @@ function ocha_key_figures_theme_suggestions_ocha_key_figures_figure(array $varia
     return [];
   }
 
+  $new = 'ocha_key_figures_figure__' . str_replace('-', '_', $variables['figure_id']);
   $suggestions = [
-    'ocha_key_figures_extended_figure__' . $variables['figure_id'],
+    $new,
   ];
 
   $parts = explode('__', $variables['theme_hook_original']);
   array_shift($parts);
 
-  $new = 'ocha_key_figures_extended_figure__' . $variables['figure_id'];
   foreach ($parts as $part) {
     $new .= '__' . $part;
     $suggestions[] = $new;

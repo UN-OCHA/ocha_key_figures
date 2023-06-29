@@ -87,6 +87,7 @@ class KeyFigureCondensed extends KeyFigureBase {
         $value = $item->getFigureValue();
         $unit = $item->getFigureUnit();
 
+        $data = [];
         if ($item->getFigureProvider() != 'manual') {
           $data = $this->ochaKeyFiguresApiClient->getFigure($item->getFigureProvider(), strtolower($item->getFigureId()));
 
@@ -104,11 +105,13 @@ class KeyFigureCondensed extends KeyFigureBase {
         if (isset($label, $value)) {
           $value = $this->formatNumber($value, $langcode);
           $elements['#figures'][$delta] = [
-            '#theme' => 'ocha_key_figures_figure__' . $this->viewMode,
+            '#theme' => 'ocha_key_figures_figure__' . $theme_suggestions,
             '#label' => $label,
             '#value' => $value,
             '#unit' => $unit,
             '#country' => $item->getFigureCountry(),
+            '#figure_id' => $data['figure_id'] ?? '',
+            '#figure' => $data,
             '#year' => $item->getFigureYear(),
             '#value_prefix' => $data['prefix'] ?? '',
             '#value_suffix' => $data['suffix'] ?? '',
