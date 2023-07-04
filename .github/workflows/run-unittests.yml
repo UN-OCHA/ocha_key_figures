@@ -1,0 +1,42 @@
+name: Run unit tests
+
+on: [pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup PHP with PECL extension
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.0
+          tools: composer
+        env:
+          fail-fast: true
+
+      - name: Software versions
+        id: versions
+        uses: cafuego/command-output@main
+        with:
+          run: |
+            php --version && composer --version
+
+      - name: Install Drupal core dependencies
+        run: |
+          composer create-project drupal/recommended-project .
+
+      - name: Checkout Code
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          path: drupal/web/modules/ocha_key_figures
+
+      - name: Install test dependencies
+        run: |
+          composer --no-interaction --no-progress require \
+            phpspec/prophecy-phpunit phpunit/phpunit
+
+      - name: Run unit tests
+        run: |
+          ./vendor/bin/phpunit web/modules/ocha_key_figures/tests
