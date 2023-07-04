@@ -7,4 +7,6 @@ You will need an API key to able to use this module and add the following config
 ```php
 $config['ocha_key_figures.settings']['ocha_api_url'] = 'https://keyfigures.api.unocha.org/api/v1';
 $config['ocha_key_figures.settings']['ocha_api_key'] = 'YOUR-API-KEY';
+$config['ocha_key_figures.settings']['ocha_app_name'] = 'YOUR-APP-NAME';
+$config['ocha_key_figures.settings']['max_age'] = 60;
 ```

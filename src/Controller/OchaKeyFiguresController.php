@@ -5,16 +5,23 @@ namespace Drupal\ocha_key_figures\Controller;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ocha_key_figures\Plugin\Field\FieldType\KeyFigure;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Base controller for Key Figures.
  */
-class OchaKeyFiguresController extends ControllerBase {
+class OchaKeyFiguresController implements ContainerInjectionInterface {
+
+  use LoggerChannelTrait;
+  use StringTranslationTrait;
 
   /**
    * The HTTP client to fetch the files with.
@@ -29,6 +36,13 @@ class OchaKeyFiguresController extends ControllerBase {
    * @var \Drupal\Core\Cache\CacheBackendInterface
    */
   protected $cacheBackend;
+
+  /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
 
   /**
    * Cache Id.
@@ -68,9 +82,28 @@ class OchaKeyFiguresController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ClientInterface $http_client, CacheBackendInterface $cache) {
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('http_client'),
+      $container->get('ocha_key_figures.cache'),
+      $container()->get('config.factory'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function config($name) {
+    return $this->configFactory->get($name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(ClientInterface $http_client, CacheBackendInterface $cache, ConfigFactoryInterface $config_factory) {
     $this->httpClient = $http_client;
     $this->cacheBackend = $cache;
+    $this->configFactory = $config_factory;
 
     $this->apiUrl = $this->config('ocha_key_figures.settings')->get('ocha_api_url');
     $this->apiKey = $this->config('ocha_key_figures.settings')->get('ocha_api_key');
@@ -241,6 +274,49 @@ class OchaKeyFiguresController extends ControllerBase {
     $data['cache_tags'] = $this->getCacheTags($data);
 
     return $data;
+  }
+
+  /**
+   * Get the figures available for the figure provider, country and year.
+   *
+   * @param string $provider
+   *   Provider.
+   * @param string|array $country
+   *   ISO3 code of a country.
+   * @param string $year
+   *   Year.
+   *
+   * @return array
+   *   Associative array keyed by figure ID and with figures data as values.
+   */
+  public function getFigures($provider, $country, $year) {
+    $query = [
+      'iso3' => $country,
+      'year' => $year,
+      'archived' => 0,
+    ];
+
+    // Special case for year.
+    if ($year == 1) {
+      unset($query['year']);
+    }
+    elseif ($year == 2) {
+      $query['year'] = date('Y');
+    }
+
+    $data = $this->query($provider, '', $query);
+
+    $figures = [];
+
+    if (!empty($data)) {
+      foreach ($data as $item) {
+        $figures[$item['id']] = $item;
+      }
+    }
+
+    asort($figures);
+
+    return $figures;
   }
 
   /**

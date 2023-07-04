@@ -5,7 +5,7 @@ services:
 
   ocha_key_figures.key_figures_controller:
     class: \Drupal\ocha_key_figures\Controller\OchaKeyFiguresController
-    arguments: ['@http_client', '@ocha_key_figures.cache']
+    arguments: ['@http_client', '@ocha_key_figures.cache', '@config.factory']
 
   ocha_key_figures.cache:
     class: Drupal\Core\Cache\CacheBackendInterface
