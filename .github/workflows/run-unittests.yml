@@ -35,8 +35,8 @@ jobs:
       - name: Install test dependencies
         run: |
           composer --no-interaction --no-progress require \
-            phpspec/prophecy-phpunit phpunit/phpunit
+            phpspec/prophecy-phpunit phpunit/phpunit behat/mink
 
       - name: Run unit tests
         run: |
-          ./vendor/bin/phpunit --no-configuration --bootstrap web/core/tests/bootstrap.php web/modules/ocha_key_figures/tests
+          ./vendor/bin/phpunit --configuration web/core/phpunit.xml.dist web/modules/ocha_key_figures/tests
