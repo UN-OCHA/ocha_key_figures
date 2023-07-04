@@ -94,10 +94,17 @@ function ocha_key_figures_theme_suggestions_ocha_key_figures_extended_figure(arr
     return [];
   }
 
+  // Figure Id.
   $new = 'ocha_key_figures_extended_figure__' . str_replace('-', '_', $variables['figure']['figure_id']);
   $suggestions = [
     $new,
   ];
+
+  // Provider.
+  if (isset($variables['figure']['provider'])) {
+    $new .= '__' . str_replace('-', '_', $variables['figure']['provider']);
+    $suggestions[] = $new;
+  }
 
   $parts = explode('__', $variables['theme_hook_original']);
   array_shift($parts);
@@ -122,10 +129,17 @@ function ocha_key_figures_theme_suggestions_ocha_key_figures_figure(array $varia
     return [];
   }
 
+  // Figure Id.
   $new = 'ocha_key_figures_figure__' . str_replace('-', '_', $variables['figure_id']);
   $suggestions = [
     $new,
   ];
+
+  // Provider.
+  if (isset($variables['provider'])) {
+    $new .= '__' . str_replace('-', '_', $variables['provider']);
+    $suggestions[] = $new;
+  }
 
   $parts = explode('__', $variables['theme_hook_original']);
   array_shift($parts);
