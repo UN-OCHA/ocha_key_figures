@@ -39,4 +39,4 @@ jobs:
 
       - name: Run unit tests
         run: |
-          ./vendor/bin/phpunit web/modules/ocha_key_figures/tests
+          ./vendor/bin/phpunit --no-configuration --bootstrap web/core/tests/bootstrap.php web/modules/ocha_key_figures/tests
