@@ -122,22 +122,22 @@ class OchaControllerYearTest extends UnitTestCase {
     // Check wich calls are made.
     $l->notice('Fetching data from @url', [
       '@url' => 'https://www.example.com/api/v1/me/providers',
-    ])->willReturn('');
+    ])->will(function(){});
     $l->notice('Fetching data from @url', [
       '@url' => 'https://www.example.com/api/v1/one?iso3=bel&archived=0',
-    ])->willReturn('');
+    ])->will(function(){});
     $l->notice('Fetching data from @url', [
       '@url' => 'https://www.example.com/api/v1/one?iso3=bel&year=' . date('Y') . '&archived=0',
-    ])->willReturn('');
+    ])->will(function(){});
     $l->notice('Fetching data from @url', [
       '@url' => 'https://www.example.com/api/v1/one?iso3=bel&year=1999&archived=0',
-    ])->willReturn('');
+    ])->will(function(){});
     $l->notice('Fetching data from @url', [
       '@url' => 'https://www.example.com/api/v1/one/ocha-presences/roap/' . date('Y') . '/figures',
-    ])->willReturn('');
+    ])->will(function(){});
     $l->notice('Fetching data from @url', [
       '@url' => 'https://www.example.com/api/v1/one/ocha-presences/roap/1999/figures',
-    ])->willReturn('');
+    ])->will(function(){});
 
     $this->loggerFactory = $this->prophesize(LoggerChannelFactory::class);
     $this->loggerFactory->get('ocha_key_figures_fts_figures')->willReturn($l->reveal());
