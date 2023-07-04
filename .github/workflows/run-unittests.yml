@@ -35,7 +35,7 @@ jobs:
       - name: Install test dependencies
         run: |
           composer --no-interaction --no-progress require \
-            phpspec/prophecy-phpunit phpunit/phpunit behat/mink
+            phpspec/prophecy-phpunit phpunit/phpunit behat/mink phpcompatibility/php-compatibility
 
       - name: Run unit tests
         run: |
