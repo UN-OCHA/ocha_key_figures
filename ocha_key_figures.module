@@ -45,6 +45,8 @@ function ocha_key_figures_theme($existing, $type, $theme, $path) {
         'value' => NULL,
         'unit' => NULL,
         'country' => NULL,
+        'figure' => NULL,
+        'figure_id' => NULL,
         'year' => NULL,
         'value_prefix' => NULL,
         'value_suffix' => NULL,
@@ -78,4 +80,60 @@ function ocha_key_figures_system_breadcrumb_alter(\Drupal\Core\Breadcrumb\Breadc
   $breadcrumb->addLink(Link::createFromRoute($ocha_presence['name'], 'ocha_key_figures.ocha_presences.edit', [
     'id' => $id,
   ]));
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function ocha_key_figures_theme_suggestions_ocha_key_figures_extended_figure(array $variables) {
+  if (!isset($variables['figure']['figure_id'])) {
+    return [];
+  }
+
+  if (empty($variables['figure']['figure_id'])) {
+    return [];
+  }
+
+  $new = 'ocha_key_figures_extended_figure__' . str_replace('-', '_', $variables['figure']['figure_id']);
+  $suggestions = [
+    $new,
+  ];
+
+  $parts = explode('__', $variables['theme_hook_original']);
+  array_shift($parts);
+
+  foreach ($parts as $part) {
+    $new .= '__' . $part;
+    $suggestions[] = $new;
+  }
+
+  return $suggestions;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function ocha_key_figures_theme_suggestions_ocha_key_figures_figure(array $variables) {
+  if (!isset($variables['figure_id'])) {
+    return [];
+  }
+
+  if (empty($variables['figure_id'])) {
+    return [];
+  }
+
+  $new = 'ocha_key_figures_figure__' . str_replace('-', '_', $variables['figure_id']);
+  $suggestions = [
+    $new,
+  ];
+
+  $parts = explode('__', $variables['theme_hook_original']);
+  array_shift($parts);
+
+  foreach ($parts as $part) {
+    $new .= '__' . $part;
+    $suggestions[] = $new;
+  }
+
+  return $suggestions;
 }

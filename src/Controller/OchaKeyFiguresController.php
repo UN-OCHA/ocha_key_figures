@@ -846,6 +846,10 @@ class OchaKeyFiguresController extends ControllerBase {
   public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year, $figure_ids = []) : array {
     $prefix = $this->getPrefix($provider);
 
+    if ($year == 2) {
+      $year = date('Y');
+    }
+
     $query = [];
     if (!empty($figure_ids)) {
       $query['figure_id'] = $figure_ids;

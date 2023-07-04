@@ -87,6 +87,8 @@ class KeyFigurePresenceCondensed extends KeyFigureBase {
         '#value' => $figure['value'],
         '#unit' => $figure['unit'],
         '#country' => $figure['country'],
+        '#figure_id' => $figure['figure_id'] ?? '',
+        '#figure' => $figure,
         '#year' => $figure['year'],
         '#value_prefix' => $figure['prefix'] ?? '',
         '#value_suffix' => $figure['suffix'] ?? '',

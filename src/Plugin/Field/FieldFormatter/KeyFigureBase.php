@@ -150,11 +150,21 @@ class KeyFigureBase extends FormatterBase {
    *   Associative array keyed by figure ID and with figures data as values.
    */
   protected function getFigures($provider, $country, $year) {
-    $data = $this->ochaKeyFiguresApiClient->query($provider, '', [
+    $query = [
       'iso3' => $country,
       'year' => $year,
       'archived' => 0,
-    ]);
+    ];
+
+    // Special case for year.
+    if ($year == 1) {
+      unset($query['year']);
+    }
+    elseif ($year == 2) {
+      $query['year'] = date('Y');
+    }
+
+    $data = $this->ochaKeyFiguresApiClient->query($provider, '', $query);
 
     $figures = [];
 
