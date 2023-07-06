@@ -175,7 +175,7 @@ class KeyFigureExtended extends KeyFigureBase {
     // Build figures.
     $data = $this->ochaKeyFiguresApiClient->buildKeyFigures($filtered_results, $sparklines);
     if (empty($data)) {
-      return FALSE;
+      return [];
     }
 
     foreach ($data as &$fig) {
