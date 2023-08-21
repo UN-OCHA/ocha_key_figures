@@ -204,6 +204,7 @@ class KeyFigureBase extends FormatterBase {
     // Set percentage suffix if needed.
     if (isset($figure['value_type']) && $figure['value_type'] == 'percentage') {
       $figure['unit'] = !empty($figure['unit']) ? $figure['unit'] : '%';
+      $figure['suffix'] = $figure['unit'];
       if ($percentage_formatted != 'yes') {
         $figure['value'] /= 100;
       }
