@@ -109,13 +109,13 @@ class WebhookController extends ControllerBase {
           $query->condition($name . '.provider', $record['data']['provider']);
           $query->condition($name . '.country', $record['data']['iso3']);
           $query->condition($name . '.year', [1, 2, $record['data']['year']], 'IN');
-          $result = $query->execute();
+          $result = $query->accessCheck(FALSE)->execute();
 
           // Check by Id for existing records.
           if (!$is_new) {
             $query = $this->entityTypeManager->getStorage($type)->getQuery();
             $query->condition($name . '.id', $figure_id);
-            $result = array_merge($result, $query->execute());
+            $result = array_merge($result, $query->accessCheck(FALSE)->execute());
           }
 
           // Add records for event.
