@@ -155,7 +155,7 @@ class KeyFigureBase extends FormatterBase {
     $data = $this->ochaKeyFiguresApiClient->getFigures($provider, $country, $year);
     if (!empty($data)) {
       foreach ($data as $item) {
-        $figures[$item['id']] = $item;
+        $figures[$item['figure_id']] = $item;
       }
     }
 

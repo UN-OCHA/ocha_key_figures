@@ -250,7 +250,7 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        $figures[$item['id']] = $item;
+        $figures[$item['figure_id']] = $item;
       }
     }
 
