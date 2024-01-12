@@ -86,13 +86,15 @@ class KeyFigureCondensed extends KeyFigureBase {
         $label = $item->getFigureLabel();
         $value = $item->getFigureValue();
         $unit = $item->getFigureUnit();
+        $year = $item->getFigureYear();
 
         $data = [];
         if ($item->getFigureProvider() != 'manual') {
-          $data = $this->ochaKeyFiguresApiClient->getFigure($item->getFigureProvider(), strtolower($item->getFigureId()));
+          $data = $this->ochaKeyFiguresApiClient->getFigureByFigureId($item->getFigureProvider(), $item->getFigureCountry(), $item->getFigureYear(), strtolower($item->getFigureId()));
 
           if (isset($data['value'], $data['value_type'])) {
             $value = $data['value'];
+            $year = $data['year'];
             $unit = $data['unit'] ?? '';
 
             $this->addPrefixSuffix($data, $langcode);
@@ -112,7 +114,7 @@ class KeyFigureCondensed extends KeyFigureBase {
             '#country' => $item->getFigureCountry(),
             '#figure_id' => $data['figure_id'] ?? '',
             '#figure' => $data,
-            '#year' => $item->getFigureYear(),
+            '#year' => $year,
             '#value_prefix' => $data['prefix'] ?? '',
             '#value_suffix' => $data['suffix'] ?? '',
             '#cache' => [

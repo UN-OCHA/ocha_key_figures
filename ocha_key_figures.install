@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Themes and preprocessors for OCHA Key Figures.
+ */
+
+use Drupal\Core\Entity\ContentEntityBase;
+
+/**
+ * Convert id to figure_id.
+ */
+function ocha_key_figures_update_9001() {
+  $field_storage_config_storage = \Drupal::entityTypeManager()->getStorage('field_storage_config');
+  $fields = $field_storage_config_storage->loadByProperties([
+    'type' => 'key_figure',
+  ]);
+
+  /** @var \Drupal\field\Entity\FieldStorageConfig $field */
+  foreach ($fields as $field) {
+    // Load all entities.
+    $entities = \Drupal::entityTypeManager()->getStorage($field->getTargetEntityTypeId())->loadMultiple();
+    foreach ($entities as $entity) {
+      if ($entity instanceof ContentEntityBase) {
+        if (!$entity->hasField($field->getName())) {
+          continue;
+        }
+
+        $values = $entity->get($field->getName())->getValue();
+        print_r($values);
+        foreach ($values as &$value) {
+          if (!isset($value['id'])) {
+            continue;
+          }
+
+          if (strpos($value['id'], '_') === FALSE) {
+            continue;
+          }
+
+          $v = $value['id'];
+          $v = explode('_', $v);
+          $value['id'] = array_pop($v);
+        }
+
+        $entity->set($field->getName(), $values);
+        $entity->save();
+      }
+    }
+  }
+}

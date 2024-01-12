@@ -243,14 +243,20 @@ abstract class KeyFigureBaseWidget extends WidgetBase {
       unset($query['year']);
     }
     elseif ($year == 2) {
-      $query['year'] = date('Y');
+      $query['year'] = [
+        date('Y'),
+        date('Y') - 1,
+      ];
+      $query['order'] = [
+        'year' => 'DESC',
+      ];
     }
 
     $data = $this->ochaKeyFiguresApiClient->query($provider, '', $query);
     $figures = [];
     if (!empty($data)) {
       foreach ($data as $item) {
-        $figures[$item['id']] = $item;
+        $figures[$item['figure_id']] = $item;
       }
     }
 

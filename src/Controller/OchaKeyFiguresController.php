@@ -277,6 +277,41 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
   }
 
   /**
+   * Get figure by figure id.
+   */
+  public function getFigureByFigureId(string $provider, string $country, string $year, string $figure_id) : array {
+    $query = [
+      'iso3' => $country,
+      'year' => $year,
+      'archived' => 0,
+      'figure_id' => $figure_id,
+      'order' => [
+        'year' => 'desc',
+      ],
+    ];
+
+    if ($year == 2) {
+      unset($query['year']);
+      // Get current and previous year.
+      $query['year'] = [
+        date('Y'),
+        date('Y') - 1,
+      ];
+    }
+
+    $data = $this->query($provider, '', $query);
+    if (!$data) {
+      return [];
+    }
+
+    // Keep first record.
+    $data = reset($data);
+    $data['cache_tags'] = $this->getCacheTags($data);
+
+    return $data;
+  }
+
+  /**
    * Get the figures available for the figure provider, country and year.
    *
    * @param string $provider
@@ -1087,7 +1122,6 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
   public function getExternalLookup(string $provider) {
     $options = [];
 
-    $prefix = $this->getPrefix($provider);
     $query = [
       'provider' => $provider,
     ];
