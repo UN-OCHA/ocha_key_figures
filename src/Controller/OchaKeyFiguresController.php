@@ -958,6 +958,12 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
     $prefix = $this->getPrefix($provider);
     $query = [];
 
+    $url = '';
+    $query = [];
+    if (!empty($figure_ids)) {
+      $query['figure_id'] = $figure_ids;
+    }
+
     if ($year == 2) {
       $query['year'] = [
         date('Y'),
@@ -966,15 +972,14 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
       $query['order'] = [
         'year' => 'DESC',
       ];
+      $url = $prefix . '/ocha-presences/' . $ocha_presence_id;
     }
     else {
-      $query['year'] = $year;
-    }
-    if (!empty($figure_ids)) {
-      $query['figure_id'] = $figure_ids;
+      $url = $prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures';
     }
 
-    $data = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id, $query);
+    $data = $this->getData($url, $query);
+
     $output = [];
     $seen = [];
 
@@ -1082,7 +1087,10 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
    */
   public function getOchaPresenceFigureByFigureId(string $provider, string $ocha_presence_id, string $year, string $figure_id) : array {
     $prefix = $this->getPrefix($provider);
+
+    $url = '';
     $query = [];
+    $query['figure_id'] = $figure_id;
 
     if ($year == 2) {
       $query['year'] = [
@@ -1092,14 +1100,13 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
       $query['order'] = [
         'year' => 'DESC',
       ];
+      $url = $prefix . '/ocha-presences/' . $ocha_presence_id;
     }
     else {
-      $query['year'] = $year;
+      $url = $prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures';
     }
 
-    $query['figure_id'] = $figure_id;
-
-    $data = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id, $query);
+    $data = $this->getData($url, $query);
 
     $figures = [];
     $seen = [];

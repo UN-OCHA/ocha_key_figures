@@ -132,7 +132,7 @@ class OchaControllerYearTest extends UnitTestCase {
       '@url' => 'https://www.example.com/api/v1/one?iso3=bel&year=1999&archived=0',
     ])->will(function(){});
     $l->notice('Fetching data from @url', [
-      '@url' => 'https://www.example.com/api/v1/one/ocha-presences/roap/' . date('Y') . '/figures',
+      '@url' => 'https://www.example.com/api/v1/one/ocha-presences/roap?year%5B0%5D=' . date('Y') . '&year%5B1%5D=' . date('Y') - 1 . '&order%5Byear%5D=DESC',
     ])->will(function(){});
     $l->notice('Fetching data from @url', [
       '@url' => 'https://www.example.com/api/v1/one/ocha-presences/roap/1999/figures',
