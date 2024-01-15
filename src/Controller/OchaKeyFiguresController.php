@@ -956,17 +956,40 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
    */
   public function getOchaPresenceFigures(string $provider, string $ocha_presence_id, string $year, $figure_ids = []) : array {
     $prefix = $this->getPrefix($provider);
+    $query = [];
 
     if ($year == 2) {
-      $year = date('Y');
+      $query['year'] = [
+        date('Y'),
+        date('Y') - 1,
+      ];
+      $query['order'] = [
+        'year' => 'DESC',
+      ];
     }
-
-    $query = [];
+    else {
+      $query['year'] = $year;
+    }
     if (!empty($figure_ids)) {
       $query['figure_id'] = $figure_ids;
     }
 
-    return $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures', $query);
+    $data = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id, $query);
+    $output = [];
+    $seen = [];
+
+    // Keep most recent data based on figure_id and year.
+    foreach ($data as $keyfigure) {
+      if (!isset($seen[$keyfigure['figure_id']])) {
+          $seen[$keyfigure['figure_id']] = $keyfigure['year'];
+          $output[] = $keyfigure;
+      }
+      elseif ($seen[$keyfigure['figure_id']] == $keyfigure['year']) {
+          $output[] = $keyfigure;
+      }
+    }
+
+    return $output;
   }
 
   /**
@@ -1059,13 +1082,40 @@ class OchaKeyFiguresController implements ContainerInjectionInterface {
    */
   public function getOchaPresenceFigureByFigureId(string $provider, string $ocha_presence_id, string $year, string $figure_id) : array {
     $prefix = $this->getPrefix($provider);
+    $query = [];
+
     if ($year == 2) {
-      $year = date('Y');
+      $query['year'] = [
+        date('Y'),
+        date('Y') - 1,
+      ];
+      $query['order'] = [
+        'year' => 'DESC',
+      ];
+    }
+    else {
+      $query['year'] = $year;
     }
 
-    $figures = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id . '/' . $year . '/figures', [
-      'figure_id' => $figure_id,
-    ]);
+    $query['figure_id'] = $figure_id;
+
+    $data = $this->getData($prefix . '/ocha-presences/' . $ocha_presence_id, $query);
+
+    $figures = [];
+    $seen = [];
+
+    // Keep most recent data based on figure_id and year.
+    foreach ($data as $keyfigure) {
+      if (!isset($seen[$keyfigure['figure_id']])) {
+          $seen[$keyfigure['figure_id']] = $keyfigure['year'];
+          $figures[] = $keyfigure;
+      }
+      elseif ($seen[$keyfigure['figure_id']] == $keyfigure['year']) {
+          $figures[] = $keyfigure;
+      }
+    }
+
+    return $figures;
 
     $data = [];
     if (!empty($figures)) {
