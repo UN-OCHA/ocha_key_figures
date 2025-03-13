@@ -1,7 +1,7 @@
 name: 'OCHA Key Figures'
 description: 'OCHA Key Figures'
 type: module
-core_version_requirement: ^8 || ^9 || ^10
+core_version_requirement: ^11
 dependencies:
   - core:options
 configure: ocha_key_figures.ocha_presences
