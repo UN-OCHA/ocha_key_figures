@@ -473,6 +473,8 @@ class NumberFormatter {
     // The rules here are based on the rules and compact decimal values for
     // the languages, adapted to our use case where we provide a number between
     // 0 and 1000.
+    // We use the integer digits of $number for our mod comparison to avoid an
+    // implicit conversion deprecation warning when dealing with a float.
     switch ($langcode) {
       // @see https://unicode-org.github.io/cldr-staging/charts/38/verify/numbers/ar.html
       case 'ar':
@@ -485,10 +487,10 @@ class NumberFormatter {
         elseif ($n === 2) {
           return 'two';
         }
-        elseif (($n % 100 >= 3) && ($n % 100 <= 10)) {
+        elseif (($i % 100 >= 3) && ($i % 100 <= 10)) {
           return 'few';
         }
-        elseif (($n % 100 >= 11) && ($n % 100 <= 99)) {
+        elseif (($i % 100 >= 11) && ($i % 100 <= 99)) {
           return 'many';
         }
         return 'other';
