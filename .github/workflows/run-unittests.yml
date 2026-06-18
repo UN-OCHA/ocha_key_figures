@@ -28,15 +28,17 @@ jobs:
 
       - name: Checkout Code
         id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           path: web/modules/ocha_key_figures
 
       - name: Install test dependencies
+        id: install
         run: |
-          composer --no-interaction --no-progress require \
-            phpspec/prophecy-phpunit phpunit/phpunit behat/mink phpcompatibility/php-compatibility symfony/phpunit-bridge
+          composer --no-interaction --no-progress -W require \
+              phpspec/prophecy-phpunit phpunit/phpunit:^11.5 behat/mink phpcompatibility/php-compatibility symfony/phpunit-bridge
 
       - name: Run unit tests
+        id: phpunit
         run: |
           ./vendor/bin/phpunit --configuration web/core/phpunit.xml.dist web/modules/ocha_key_figures/tests
