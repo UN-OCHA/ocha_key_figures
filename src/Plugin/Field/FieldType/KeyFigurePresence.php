@@ -3,6 +3,7 @@
 namespace Drupal\ocha_key_figures\Plugin\Field\FieldType;
 
 use Drupal\Component\Utility\Random;
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -12,16 +13,15 @@ use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Plugin implementation of the 'key_figure_presence' field type.
- *
- * @FieldType(
- *   id = "key_figure_presence",
- *   label = @Translation("Key Figure (OCHA Presence)"),
- *   description = @Translation("A field to display key figures."),
- *   category = @Translation("UNOCHA"),
- *   default_widget = "key_figure_presence",
- *   default_formatter = "key_figure_presence",
- * )
  */
+#[FieldType(
+  id: 'key_figure_presence',
+  label: new TranslatableMarkup('Key Figure (OCHA Presence)'),
+  description: new TranslatableMarkup('A field to display key figures.'),
+  category: 'unocha',
+  default_widget: 'key_figure_presence',
+  default_formatter: 'key_figure_presence',
+)]
 class KeyFigurePresence extends FieldItemBase {
 
   /**
